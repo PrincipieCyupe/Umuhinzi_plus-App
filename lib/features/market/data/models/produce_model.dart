@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/produce_entity.dart';
 
 /// Model class for produce data, extending [ProduceEntity].
@@ -16,16 +17,22 @@ class ProduceModel extends ProduceEntity {
 
   /// Creates a [ProduceModel] from a JSON map.
   factory ProduceModel.fromJson(Map<String, dynamic> json, String id) {
-    return ProduceModel(
-      id: id,
-      name: json['name'] as String,
-      price: (json['price'] as num).toDouble(),
-      unit: json['unit'] as String,
-      category: json['category'] as String,
-      imageUrl: json['imageUrl'] as String,
-      isAvailable: json['isAvailable'] as bool,
-      updatedAt: (json['updatedAt'] as Timestamp).toDate(),
-    );
+    try {
+      return ProduceModel(
+        id: id,
+        name: json['name'] as String,
+        price: (json['price'] as num).toDouble(),
+        unit: json['unit'] as String,
+        category: json['category'] as String,
+        imageUrl: json['imageUrl'] as String,
+        isAvailable: json['isAvailable'] as bool,
+        updatedAt: (json['updatedAt'] as Timestamp).toDate(),
+      );
+    } catch (e) {
+      debugPrint('ProduceModel: Error parsing document $id: $e');
+      debugPrint('ProduceModel: Data was: $json');
+      rethrow;
+    }
   }
 
   /// Converts the [ProduceModel] to a JSON map for Firestore.

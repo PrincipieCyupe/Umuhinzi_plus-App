@@ -15,9 +15,9 @@ class PreferencesService {
     await sharedPreferences.setString(keyLastCategory, category);
   }
 
-  /// Gets the last selected category, defaults to 'Vegetables'.
+  /// Gets the last selected category, defaults to 'All'.
   String getLastSelectedCategory() {
-    return sharedPreferences.getString(keyLastCategory) ?? 'Vegetables';
+    return sharedPreferences.getString(keyLastCategory) ?? 'All';
   }
 
   /// Saves the preferred currency.

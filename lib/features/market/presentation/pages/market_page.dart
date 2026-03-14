@@ -78,7 +78,7 @@ class MarketPage extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          String activeCategory = 'Vegetables';
+          String activeCategory = 'All';
           String currency = 'RWF';
 
           if (state is MarketLoaded) {

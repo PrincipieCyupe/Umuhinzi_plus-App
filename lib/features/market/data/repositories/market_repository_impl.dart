@@ -15,24 +15,18 @@ class MarketRepositoryImpl implements MarketRepository {
   Stream<Either<Failure, List<ProduceEntity>>> getProduceByCategory(
     String category,
   ) {
-    try {
-      return remoteDataSource
-          .getProduceByCategory(category)
-          .map((models) => Right(models));
-    } catch (e) {
-      return Stream.value(Left(ServerFailure(e.toString())));
-    }
+    return remoteDataSource
+        .getProduceByCategory(category)
+        .map<Either<Failure, List<ProduceEntity>>>((models) => Right(models))
+        .handleError((e) => Left(ServerFailure(e.toString())));
   }
 
   @override
   Stream<Either<Failure, List<ProduceEntity>>> searchProduce(String query) {
-    try {
-      return remoteDataSource
-          .searchProduce(query)
-          .map((models) => Right(models));
-    } catch (e) {
-      return Stream.value(Left(ServerFailure(e.toString())));
-    }
+    return remoteDataSource
+        .searchProduce(query)
+        .map<Either<Failure, List<ProduceEntity>>>((models) => Right(models))
+        .handleError((e) => Left(ServerFailure(e.toString())));
   }
 
   @override

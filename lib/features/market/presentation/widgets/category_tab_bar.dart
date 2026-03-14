@@ -13,7 +13,7 @@ class CategoryTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categories = ['Vegetables', 'Fruits', 'Grains'];
+    final categories = ['All', 'Vegetables', 'Fruits', 'Grains'];
 
     return SizedBox(
       height: 50,

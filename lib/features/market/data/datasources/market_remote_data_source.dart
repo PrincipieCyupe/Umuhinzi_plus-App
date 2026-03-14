@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/produce_model.dart';
 
 /// Abstract interface for the market remote data source.
@@ -27,15 +28,24 @@ class MarketRemoteDataSourceImpl implements MarketRemoteDataSource {
 
   @override
   Stream<List<ProduceModel>> getProduceByCategory(String category) {
-    return firestore
-        .collection('market_produce')
-        .where('category', isEqualTo: category)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ProduceModel.fromFirestore(doc))
-              .toList(),
-        );
+    Query<Map<String, dynamic>> query = 
+        firestore.collection('market_produce').limit(50);
+
+    if (category != 'All') {
+      query = query.where(
+        'category',
+        whereIn: [category, category.toLowerCase()],
+      );
+    }
+
+    return query.snapshots().map((snapshot) {
+      debugPrint(
+        'MarketRemoteDataSource: Query for "$category" returned ${snapshot.docs.length} docs',
+      );
+      return snapshot.docs
+          .map((doc) => ProduceModel.fromFirestore(doc))
+          .toList();
+    });
   }
 
   @override
