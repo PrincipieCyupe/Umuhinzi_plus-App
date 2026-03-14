@@ -28,8 +28,9 @@ class MarketRemoteDataSourceImpl implements MarketRemoteDataSource {
 
   @override
   Stream<List<ProduceModel>> getProduceByCategory(String category) {
-    Query<Map<String, dynamic>> query = 
-        firestore.collection('market_produce').limit(50);
+    Query<Map<String, dynamic>> query = firestore
+        .collection('market_produce')
+        .limit(50);
 
     if (category != 'All') {
       query = query.where(

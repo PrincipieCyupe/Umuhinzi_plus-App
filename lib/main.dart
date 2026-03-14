@@ -99,21 +99,7 @@ class HomeContent extends StatelessWidget {
     return BlocBuilder<NavigationCubit, int>(
       builder: (context, selectedIndex) {
         return Scaffold(
-          drawer: const Drawer(),
           body: Center(child: laterwidgets.elementAt(selectedIndex)),
-          appBar: AppBar(
-            title: Text("Umuhinzi+", style: appstyle[0]),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Image.asset(
-                  'lib/images/logo.png',
-                  width: 20,
-                  height: 20,
-                ),
-              ),
-            ],
-          ),
           bottomNavigationBar: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
             items: [

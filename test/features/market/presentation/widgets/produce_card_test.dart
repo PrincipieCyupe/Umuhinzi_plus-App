@@ -47,10 +47,17 @@ class _MockHttpClientResponse extends Mock implements HttpClientResponse {
       HttpClientResponseCompressionState.notCompressed;
 
   @override
-  StreamSubscription<List<int>> listen(void Function(List<int>)? onData,
-          {Function? onError, void Function()? onDone, bool? cancelOnError}) =>
-      const Stream<List<int>>.empty().listen(onData,
-          onError: onError, onDone: onDone, cancelOnError: cancelOnError);
+  StreamSubscription<List<int>> listen(
+    void Function(List<int>)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) => const Stream<List<int>>.empty().listen(
+    onData,
+    onError: onError,
+    onDone: onDone,
+    cancelOnError: cancelOnError,
+  );
 }
 
 void main() {
@@ -67,8 +74,9 @@ void main() {
     updatedAt: DateTime.now(),
   );
 
-  testWidgets('should render produce name, price and currency',
-      (WidgetTester tester) async {
+  testWidgets('should render produce name, price and currency', (
+    WidgetTester tester,
+  ) async {
     // arrange
     await tester.pumpWidget(
       MaterialApp(
@@ -77,10 +85,7 @@ void main() {
             child: SizedBox(
               width: 200,
               height: 300,
-              child: ProduceCard(
-                produce: tProduce,
-                currency: 'RWF',
-              ),
+              child: ProduceCard(produce: tProduce, currency: 'RWF'),
             ),
           ),
         ),
