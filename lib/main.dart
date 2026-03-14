@@ -4,23 +4,27 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'features/market/data/datasources/market_remote_data_source.dart';
-import 'features/market/data/datasources/preferences_service.dart';
-import 'features/market/data/repositories/market_repository_impl.dart';
-import 'features/market/domain/usecases/add_produce.dart';
-import 'features/market/domain/usecases/delete_produce.dart';
-import 'features/market/domain/usecases/get_produce_by_category.dart';
-import 'features/market/domain/usecases/search_produce.dart';
-import 'features/market/domain/usecases/update_produce.dart';
-import 'features/market/presentation/bloc/market_bloc.dart';
-import 'features/market/presentation/pages/market_page.dart';
+import 'package:umuhinzi_plus/firebase_options.dart';
+import 'package:umuhinzi_plus/features/home/presentation/bloc/navigation_cubit.dart';
+import 'package:umuhinzi_plus/features/market/data/datasources/market_remote_data_source.dart';
+import 'package:umuhinzi_plus/features/market/data/datasources/preferences_service.dart';
+import 'package:umuhinzi_plus/features/market/data/repositories/market_repository_impl.dart';
+import 'package:umuhinzi_plus/features/market/domain/usecases/add_produce.dart';
+import 'package:umuhinzi_plus/features/market/domain/usecases/delete_produce.dart';
+import 'package:umuhinzi_plus/features/market/domain/usecases/get_produce_by_category.dart';
+import 'package:umuhinzi_plus/features/market/domain/usecases/search_produce.dart';
+import 'package:umuhinzi_plus/features/market/domain/usecases/update_produce.dart';
+import 'package:umuhinzi_plus/features/market/presentation/bloc/market_bloc.dart';
+import 'package:umuhinzi_plus/features/market/presentation/pages/market_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     // Note: This requires google-services.json to be present for Android.
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
@@ -51,6 +55,7 @@ class Home extends StatelessWidget {
 
     return MultiBlocProvider(
       providers: [
+        BlocProvider<NavigationCubit>(create: (_) => NavigationCubit()),
         BlocProvider<MarketBloc>(
           create: (context) => MarketBloc(
             getProduceByCategory: getProduceByCat,
@@ -65,70 +70,77 @@ class Home extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(textTheme: GoogleFonts.sourceSans3TextTheme()),
-        home:
-            const MarketPage(), // Directly showing MarketPage for demonstration
+        home: const HomeContent(),
+        routes: {'/market': (_) => const MarketPage()},
       ),
     );
   }
 }
 
-class HomeContent extends StatefulWidget {
+class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
 
-  @override
-  State<HomeContent> createState() => _HomeContentState();
-}
-
-class _HomeContentState extends State<HomeContent> {
   static List<TextStyle> appstyle = [
-    TextStyle(fontWeight: FontWeight.bold),
-    TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+    const TextStyle(fontWeight: FontWeight.bold),
+    const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
   ];
-  List<Widget> laterwidgets = [
-    Text("Future home page", style: appstyle[1]),
-    Text("Future Weather page", style: appstyle[1]),
-    Text("Future Market page", style: appstyle[1]),
-    Text("Future Tips and Update page", style: appstyle[1]),
-  ];
-  List<String> items = ["Home", "Weather", "Market", "Tips & Updates"];
 
-  int _selectedIndex = 0;
-  void _onTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  static List<String> items = ["Home", "Weather", "Market", "Tips & Updates"];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: Drawer(),
-      body: Center(child: laterwidgets.elementAt(_selectedIndex)),
-      appBar: AppBar(
-        title: Text("Umuhinzi+", style: appstyle[0]),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Image.asset('lib/images/logo.png', width: 20, height: 20),
+    final List<Widget> laterwidgets = [
+      Text("Future home page", style: appstyle[1]),
+      Text("Future Weather page", style: appstyle[1]),
+      const MarketPage(),
+      Text("Future Tips and Update page", style: appstyle[1]),
+    ];
+
+    return BlocBuilder<NavigationCubit, int>(
+      builder: (context, selectedIndex) {
+        return Scaffold(
+          drawer: const Drawer(),
+          body: Center(child: laterwidgets.elementAt(selectedIndex)),
+          appBar: AppBar(
+            title: Text("Umuhinzi+", style: appstyle[0]),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Image.asset(
+                  'lib/images/logo.png',
+                  width: 20,
+                  height: 20,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: items[0]),
-          BottomNavigationBarItem(icon: Icon(Icons.wb_sunny), label: items[1]),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up),
-            label: items[2],
+          bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            items: [
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.home),
+                label: items[0],
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.wb_sunny),
+                label: items[1],
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.trending_up),
+                label: items[2],
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.lightbulb),
+                label: items[3],
+              ),
+            ],
+            currentIndex: selectedIndex,
+            onTap: (index) => context.read<NavigationCubit>().navigateTo(index),
+            unselectedItemColor: Colors.green,
+            selectedItemColor: Colors.orangeAccent,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.lightbulb), label: items[3]),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onTapped,
-        unselectedItemColor: Colors.green,
-        selectedItemColor: Colors.orangeAccent,
-      ),
+        );
+      },
     );
   }
 }
