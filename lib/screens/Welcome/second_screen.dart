@@ -1,0 +1,142 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'third_screen.dart';
+import '../Custom/backgroundimage.dart';
+import '../login.dart';
+
+void main() {
+  runApp(const ScreenTwo());
+}
+
+class ScreenTwo extends StatelessWidget {
+  const ScreenTwo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(textTheme: GoogleFonts.sourceSans3TextTheme()),
+      home: const SecondScreen(),
+    );
+  }
+}
+
+class SecondScreen extends StatelessWidget {
+  const SecondScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          CustomBgImg(),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: screenHeight * 0.1),
+                    Image.asset('lib/images/logo.png'),
+                    SizedBox(height: screenHeight * 0.07),
+                    RichText(
+                      textAlign: TextAlign.center,
+                      text: const TextSpan(
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          height: 1.4,
+                        ),
+                        children: [
+                          TextSpan(text: "Access expert "),
+                          TextSpan(
+                            text: "agricultural guidance",
+                            style: TextStyle(color: Color(0xFFFFF000)),
+                          ),
+                          TextSpan(text: " tailored to your needs, ensuring "),
+                          TextSpan(
+                            text: "optimal productivity",
+                            style: TextStyle(color: Color(0xFFFFF000)),
+                          ),
+                          TextSpan(
+                            text: " and success in your farming endeavors.",
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: screenHeight * 0.1),
+
+                    Row(
+                      children: [
+                        // Next Button
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              shape: const StadiumBorder(),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const ThirdScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Next",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 20),
+
+                        // Skip Button
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFFF000),
+                              shape: const StadiumBorder(),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Skip  >>",
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

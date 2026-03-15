@@ -1,77 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
 
-void main() {
-  runApp(const Home());
+import 'firebase_options.dart';
+import 'screens/Welcome/first_screen.dart';
+import 'screens/home_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase with options from firebase_options.dart
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  runApp(
+     MaterialApp(debugShowCheckedModeBanner: false, home: AuthWrapper(), theme: ThemeData(textTheme: GoogleFonts.sourceSans3TextTheme())),
+  );
 }
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+/// AuthWrapper - Handles auth state and redirects to appropriate screen
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-       home: HomeContent(),
-       theme: ThemeData(
-        textTheme: GoogleFonts.sourceSans3TextTheme()
-        )
-      );
-  }
-}
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Show loading while checking auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Color(0xFF0C4D32),
+            body: Center(
+              child: CircularProgressIndicator(color: Color(0xFF3FAE4A)),
+            ),
+          );
+        }
 
-class HomeContent extends StatefulWidget {
-  const HomeContent({super.key});
+        // If user is logged in, go to home, otherwise go to first screen
+        if (snapshot.hasData && snapshot.data != null) {
+          return const Home();
+        }
 
-  @override
-  State<HomeContent> createState() => _HomeContentState();
-}
-
-class _HomeContentState extends State<HomeContent> {
-  static List<TextStyle> appstyle = [
-    TextStyle(fontWeight: FontWeight.bold),
-    TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-  ];
-  List<Widget> laterwidgets = [
-    Text("Future home page", style: appstyle[1]),
-    Text("Future Weather page", style: appstyle[1]),
-    Text("Future Market page", style: appstyle[1]),
-    Text("Future Tips and Update page", style: appstyle[1]),
-  ];
-  List<String> items = ["Home", "Weather", "Market", "Tips & Updates"];
-
-  int _selectedIndex = 0;
-  void _onTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: Drawer(),
-      body: Center(child: laterwidgets.elementAt(_selectedIndex)),
-      appBar: AppBar(title: Text("Umuhinzi+", style: appstyle[0]), actions: [Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Image.asset('lib/images/logo.png', width: 20, height: 20,),
-      )],),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: items[0]),
-          BottomNavigationBarItem(icon: Icon(Icons.wb_sunny), label: items[1]),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.trending_up),
-            label: items[2],
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.lightbulb), label: items[3]),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onTapped,
-        unselectedItemColor: Colors.green,
-        selectedItemColor: Colors.orangeAccent,
-      ),
+        return const FirstScreen();
+      },
     );
   }
 }
