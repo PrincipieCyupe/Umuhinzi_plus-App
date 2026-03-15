@@ -1,6 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+import '../service/auth_service.dart';
+import 'Welcome/input_screen.dart';
+import 'signup.dart';
+
 void main() {
   runApp(
     const MaterialApp(debugShowCheckedModeBanner: false, home: LoginScreen()),
@@ -19,7 +23,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
 
+  final AuthService _authService = AuthService();
+
   bool _hidePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -33,6 +40,87 @@ class _LoginScreenState extends State<LoginScreen> {
     return emailRegex.hasMatch(email.trim());
   }
 
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = await _authService.signInWithEmailPassword(
+        email: _emailCtrl.text,
+        password: _passCtrl.text,
+      );
+
+      if (user != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful!'),
+            backgroundColor: Color(0xFF3FAE4A),
+          ),
+        );
+
+        // Navigate to input screen
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const InputDetails()),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = await _authService.signInWithGoogle();
+
+      if (user != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Welcome ${user.displayName ?? 'User'}!'),
+            backgroundColor: Color(0xFF3FAE4A),
+          ),
+        );
+
+        // Navigate to input screen
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const InputDetails()),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,10 +131,8 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Image.asset('lib/images/Umuhinzi.png', fit: BoxFit.cover),
           ),
 
-          // Dark overlay, just contrast for better readability
-          Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0)),
-          ),
+          // Dark overlay
+          Positioned.fill(child: Container(color: Colors.black.withOpacity(0))),
 
           SafeArea(
             child: Center(
@@ -82,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 18),
 
-                      // Glass card as preffered UIstyle
+                      // Glass card
                       ClipRRect(
                         borderRadius: BorderRadius.circular(22),
                         child: BackdropFilter(
@@ -90,10 +176,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
-                              // glass color
                               color: Colors.white.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(22),
-                              // stroke border
                               border: Border.all(
                                 color: Colors.white.withOpacity(0.35),
                                 width: 1.2,
@@ -247,7 +331,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   const SizedBox(height: 6),
 
-                                  // Login
+                                  // Login Button
                                   SizedBox(
                                     width: double.infinity,
                                     height: 50,
@@ -262,30 +346,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ),
                                         ),
                                       ),
-                                      onPressed: () {
-                                        if (_formKey.currentState!.validate()) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                "Login valid ✅ (demo)",
+                                      onPressed: _isLoading
+                                          ? null
+                                          : _handleLogin,
+                                      child: _isLoading
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Text(
+                                              "Login",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w800,
+                                                color: Colors.white,
                                               ),
                                             ),
-                                          );
-                                        }
-                                      },
-                                      child: const Text(
-                                        "Login",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          color: Colors.white,
-                                        ),
-                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
 
+                                  // Google Sign-In Button
                                   SizedBox(
                                     width: double.infinity,
                                     height: 50,
@@ -303,17 +387,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                         backgroundColor: Colors.white
                                             .withOpacity(0.10),
                                       ),
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              "Google login coming soon",
-                                            ),
-                                          ),
-                                        );
-                                      },
+                                      onPressed: _isLoading
+                                          ? null
+                                          : _handleGoogleSignIn,
                                       child: Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
@@ -346,7 +422,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       ),
                                       TextButton(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          Navigator.of(context).pushReplacement(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const SignUp(),
+                                            ),
+                                          );
+                                        },
                                         child: const Text(
                                           "Register",
                                           style: TextStyle(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../Custom/backgroundimage.dart';
+import 'welcome_screen.dart';
+import '../login.dart';
 
 void main() {
   runApp(const ScreenThree());
@@ -55,19 +57,16 @@ class ThirdScreen extends StatelessWidget {
                           TextSpan(text: "Access easy-to-follow "),
                           TextSpan(
                             text: "farming tips",
-                            style: TextStyle(
-                              color: Color(0xFFFFF000),
-                            ), // Yellow
+                            style: TextStyle(color: Color(0xFFFFF000)),
                           ),
                           TextSpan(text: " and "),
                           TextSpan(
                             text: "best practices",
-                            style: TextStyle(
-                              color: Color(0xFFFFF000),
-                            ), // Yellow
+                            style: TextStyle(color: Color(0xFFFFF000)),
                           ),
                           TextSpan(
-                            text: " that supports healthy crops, reduce losses, and improve overall harvest results using, real-world advices. ",
+                            text:
+                                " that supports healthy crops, reduce losses, and improve overall harvest results using, real-world advices. ",
                           ),
                         ],
                       ),
@@ -86,9 +85,9 @@ class ThirdScreen extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             onPressed: () {
-                              Navigator.of(context).push(
+                              Navigator.of(context).pushReplacement(
                                 MaterialPageRoute(
-                                  builder: (context) => Placeholder(),
+                                  builder: (context) => const WelcomeScreen(),
                                 ),
                               );
                             },
@@ -103,9 +102,8 @@ class ThirdScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(
-                          width: 20,
-                        ), // Space between the two buttons
+                        const SizedBox(width: 20),
+
                         // Skip Button
                         Expanded(
                           child: ElevatedButton(
@@ -114,7 +112,13 @@ class ThirdScreen extends StatelessWidget {
                               shape: const StadiumBorder(),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginScreen(),
+                                ),
+                              );
+                            },
                             child: const Text(
                               "Skip  >>",
                               style: TextStyle(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'third_screen.dart';
 import '../Custom/backgroundimage.dart';
+import '../login.dart';
 
 void main() {
   runApp(const ScreenTwo());
@@ -56,16 +57,12 @@ class SecondScreen extends StatelessWidget {
                           TextSpan(text: "Access expert "),
                           TextSpan(
                             text: "agricultural guidance",
-                            style: TextStyle(
-                              color: Color(0xFFFFF000),
-                            ), // Yellow
+                            style: TextStyle(color: Color(0xFFFFF000)),
                           ),
                           TextSpan(text: " tailored to your needs, ensuring "),
                           TextSpan(
                             text: "optimal productivity",
-                            style: TextStyle(
-                              color: Color(0xFFFFF000),
-                            ), // Yellow
+                            style: TextStyle(color: Color(0xFFFFF000)),
                           ),
                           TextSpan(
                             text: " and success in your farming endeavors.",
@@ -89,7 +86,7 @@ class SecondScreen extends StatelessWidget {
                             onPressed: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) => ScreenThree(),
+                                  builder: (context) => const ThirdScreen(),
                                 ),
                               );
                             },
@@ -104,9 +101,8 @@ class SecondScreen extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(
-                          width: 20,
-                        ), // Space between the two buttons
+                        const SizedBox(width: 20),
+
                         // Skip Button
                         Expanded(
                           child: ElevatedButton(
@@ -115,7 +111,13 @@ class SecondScreen extends StatelessWidget {
                               shape: const StadiumBorder(),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginScreen(),
+                                ),
+                              );
+                            },
                             child: const Text(
                               "Skip  >>",
                               style: TextStyle(

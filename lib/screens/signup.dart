@@ -1,10 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SignUp(),
-    ));
+import '../service/auth_service.dart';
+import 'Welcome/input_screen.dart';
+import 'login.dart';
+
+void main() => runApp(
+  const MaterialApp(debugShowCheckedModeBanner: false, home: SignUp()),
+);
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -21,9 +25,12 @@ class _SignUpState extends State<SignUp> {
   final _passCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
 
+  final AuthService _authService = AuthService();
+
   bool _hidePassword = true;
   bool _hideConfirm = true;
   bool _agree = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -55,6 +62,108 @@ class _SignUpState extends State<SignUp> {
     return null;
   }
 
+  Future<void> _handleSignUp() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (!_agree) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please accept Terms & Privacy Policy"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = await _authService.signUpWithEmailPassword(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text,
+      );
+
+      if (user != null && mounted) {
+        // Save user info to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_name', _nameCtrl.text.trim());
+        await prefs.setString('user_email', _emailCtrl.text.trim());
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Account created successfully!'),
+            backgroundColor: Color(0xFF3FAE4A),
+          ),
+        );
+
+        // Navigate to input screen
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const InputDetails()),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignUp() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final user = await _authService.signInWithGoogle();
+
+      if (user != null && mounted) {
+        // Save user info to SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_name', user.displayName ?? 'User');
+        await prefs.setString('user_email', user.email ?? '');
+
+        String welcomeName = user.displayName ?? 'User';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Welcome $welcomeName!'),
+            backgroundColor: const Color(0xFF3FAE4A),
+          ),
+        );
+
+        // Navigate to input screen
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const InputDetails()),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   InputDecoration _glassFieldDecoration({
     required String label,
     required IconData icon,
@@ -77,7 +186,10 @@ class _SignUpState extends State<SignUp> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.55), width: 1.4),
+        borderSide: BorderSide(
+          color: Colors.white.withOpacity(0.55),
+          width: 1.4,
+        ),
       ),
     );
   }
@@ -89,16 +201,11 @@ class _SignUpState extends State<SignUp> {
         children: [
           // Background image
           Positioned.fill(
-            child: Image.asset(
-              'lib/images/Umuhinzi.png',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('lib/images/Umuhinzi.png', fit: BoxFit.cover),
           ),
 
           // Dark overlay
-          Positioned.fill(
-            child: Container(color: Colors.black.withOpacity(0)),
-          ),
+          Positioned.fill(child: Container(color: Colors.black.withOpacity(0))),
 
           SafeArea(
             child: Center(
@@ -190,7 +297,8 @@ class _SignUpState extends State<SignUp> {
                                     validator: (value) {
                                       final v = (value ?? '').trim();
                                       if (v.isEmpty) return "Name is required";
-                                      if (v.length < 2) return "Enter a valid name";
+                                      if (v.length < 2)
+                                        return "Enter a valid name";
                                       return null;
                                     },
                                   ),
@@ -209,7 +317,8 @@ class _SignUpState extends State<SignUp> {
                                     validator: (value) {
                                       final v = (value ?? '').trim();
                                       if (v.isEmpty) return "Email is required";
-                                      if (!_isValidEmail(v)) return "Enter a valid email";
+                                      if (!_isValidEmail(v))
+                                        return "Enter a valid email";
                                       return null;
                                     },
                                   ),
@@ -225,9 +334,13 @@ class _SignUpState extends State<SignUp> {
                                       label: "Password",
                                       icon: Icons.lock_outline,
                                       suffix: IconButton(
-                                        onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                                        onPressed: () => setState(
+                                          () => _hidePassword = !_hidePassword,
+                                        ),
                                         icon: Icon(
-                                          _hidePassword ? Icons.visibility : Icons.visibility_off,
+                                          _hidePassword
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
                                           color: Colors.white,
                                         ),
                                       ),
@@ -246,17 +359,23 @@ class _SignUpState extends State<SignUp> {
                                       label: "Confirm password",
                                       icon: Icons.lock_outline,
                                       suffix: IconButton(
-                                        onPressed: () => setState(() => _hideConfirm = !_hideConfirm),
+                                        onPressed: () => setState(
+                                          () => _hideConfirm = !_hideConfirm,
+                                        ),
                                         icon: Icon(
-                                          _hideConfirm ? Icons.visibility : Icons.visibility_off,
+                                          _hideConfirm
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
                                           color: Colors.white,
                                         ),
                                       ),
                                     ),
                                     validator: (value) {
                                       final v = (value ?? '').trim();
-                                      if (v.isEmpty) return "Confirm your password";
-                                      if (v != _passCtrl.text.trim()) return "Passwords do not match";
+                                      if (v.isEmpty)
+                                        return "Confirm your password";
+                                      if (v != _passCtrl.text.trim())
+                                        return "Passwords do not match";
                                       return null;
                                     },
                                   ),
@@ -267,8 +386,12 @@ class _SignUpState extends State<SignUp> {
                                     children: [
                                       Checkbox(
                                         value: _agree,
-                                        onChanged: (val) => setState(() => _agree = val ?? false),
-                                        side: BorderSide(color: Colors.white.withOpacity(0.7)),
+                                        onChanged: (val) => setState(
+                                          () => _agree = val ?? false,
+                                        ),
+                                        side: BorderSide(
+                                          color: Colors.white.withOpacity(0.7),
+                                        ),
                                         checkColor: Colors.white,
                                         activeColor: const Color(0xFF2FA84F),
                                       ),
@@ -276,7 +399,9 @@ class _SignUpState extends State<SignUp> {
                                         child: Text(
                                           "I agree to the Terms & Privacy Policy",
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(0.85),
+                                            color: Colors.white.withOpacity(
+                                              0.85,
+                                            ),
                                             fontSize: 13,
                                           ),
                                         ),
@@ -291,30 +416,34 @@ class _SignUpState extends State<SignUp> {
                                     height: 50,
                                     child: ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF2FA84F),
+                                        backgroundColor: const Color(
+                                          0xFF2FA84F,
+                                        ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(14),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
                                         ),
                                       ),
-                                      onPressed: () {
-                                        final valid = _formKey.currentState!.validate();
-                                        if (!valid) return;
-
-                                        if (!_agree) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text("Please accept Terms & Privacy Policy")),
-                                          );
-                                          return;
-                                        }
-
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text("Sign up valid ✅ (demo)")),
-                                        );
-                                      },
-                                      child: const Text(
-                                        "Create Account",
-                                        style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white),
-                                      ),
+                                      onPressed: _isLoading
+                                          ? null
+                                          : _handleSignUp,
+                                      child: _isLoading
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Text(
+                                              "Create Account",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w800,
+                                                color: Colors.white,
+                                              ),
+                                            ),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -330,17 +459,19 @@ class _SignUpState extends State<SignUp> {
                                           width: 1,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(14),
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
                                         ),
-                                        backgroundColor: Colors.white.withOpacity(0.10),
+                                        backgroundColor: Colors.white
+                                            .withOpacity(0.10),
                                       ),
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text("Google sign-up coming soon")),
-                                        );
-                                      },
+                                      onPressed: _isLoading
+                                          ? null
+                                          : _handleGoogleSignUp,
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Image.asset(
                                             "lib/images/google_logo.png",
@@ -369,10 +500,19 @@ class _SignUpState extends State<SignUp> {
                                     children: [
                                       Text(
                                         "Already have an account? ",
-                                        style: TextStyle(color: Colors.white.withOpacity(0.85)),
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.85),
+                                        ),
                                       ),
                                       TextButton(
-                                        onPressed: () => Navigator.pop(context),
+                                        onPressed: () {
+                                          Navigator.of(context).pushReplacement(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const LoginScreen(),
+                                            ),
+                                          );
+                                        },
                                         child: const Text(
                                           "Login",
                                           style: TextStyle(

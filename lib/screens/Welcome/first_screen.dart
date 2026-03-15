@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:umuhinzi_plus/screens/Welcome/second_screen.dart';
-import '../login.dart';
 import '../Custom/backgroundimage.dart';
 
 void main() {
@@ -96,7 +95,7 @@ class FirstScreen extends StatelessWidget {
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (context) => SecondScreen(),
+                                builder: (context) => const SecondScreen(),
                               ),
                             );
                           },
