@@ -51,10 +51,6 @@ class MarketRemoteDataSourceImpl implements MarketRemoteDataSource {
 
   @override
   Stream<List<ProduceModel>> searchProduce(String query) {
-    // Note: Firestore doesn't support native partial string matching (search).
-    // For a real app, we'd use Algolia or a similar service.
-    // For this implementation, we'll fetch all and filter client-side or use a simple prefix match.
-    // Here we'll use a prefix match for demonstration as per requirements.
     return firestore
         .collection('market_produce')
         .where('name', isGreaterThanOrEqualTo: query)

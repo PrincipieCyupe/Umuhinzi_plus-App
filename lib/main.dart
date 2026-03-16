@@ -21,7 +21,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Note: This requires google-services.json to be present for Android.
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
