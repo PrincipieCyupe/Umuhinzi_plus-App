@@ -1,0 +1,28 @@
+Running Gradle task 'assembleDebug'...                          
+lib/features/market/presentation/bloc/market_bloc.dart:60:23: Error: 'Failure' isn't a type.
+      onData: (Either<Failure, List<ProduceEntity>> result) {
+                      ^^^^^^^
+lib/features/market/presentation/bloc/market_bloc.dart:60:37: Error: 'ProduceEntity' isn't a type.
+      onData: (Either<Failure, List<ProduceEntity>> result) {
+                                    ^^^^^^^^^^^^^
+lib/features/market/presentation/bloc/market_bloc.dart:60:16: Error: 'Either' isn't a type.
+      onData: (Either<Failure, List<ProduceEntity>> result) {
+               ^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\Users\ISAAC\OneDrive\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 31s
+Running Gradle task 'assembleDebug'...                             32.3s
+Gradle task assembleDebug failed with exit code 1
