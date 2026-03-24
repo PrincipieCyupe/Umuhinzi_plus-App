@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import '../models/market_price_model.dart';
-import '../../../../core/error/exceptions.dart';
 
 class MarketCsvDataSource {
   final http.Client client;
@@ -36,7 +35,9 @@ class MarketCsvDataSource {
           if (values.length < 14) continue;
 
           final dateStr = values[0];
+          final admin1 = values[1];
           final market = values[3];
+          final categoryStr = values[6];
           final commodity = values[7];
           final unit = values[8];
           final priceType = values[10];
@@ -55,18 +56,19 @@ class MarketCsvDataSource {
             }
           }
 
-          final category = _determineCategory(commodity);
-          final imageUrl = 'https://placehold.co/400x400/e8f5e9/2e7d32?text=${Uri.encodeComponent(commodity)}';
+          final category = _determineCategory('$commodity $categoryStr');
+          // Note: imageUrl, isAvailable, category mappings match user reqs but MarketPriceModel only has specific fields. 
+          // We map to it strictly based on what WfpPriceDataSource returns.
 
           final model = MarketPriceModel(
             commodity: commodity,
             market: market,
-            district: '', // admin2 or empty if not needed
-            price: price.toString(),
+            district: admin1,
+            price: price,
             unit: unit,
             date: dateStr,
             priceType: priceType,
-            fetchedAt: DateTime.now(),
+            fetchedAt: date ?? DateTime.now(),
           );
 
           // Deduplicate: same commodity + market -> keep most recent date
@@ -85,11 +87,11 @@ class MarketCsvDataSource {
         _lastUpdated = maxDate;
         debugPrint('CSV sync successful. Parsed ${_cachedPrices.length} unique records.');
       } else {
-        throw ServerException();
+        throw Exception('Failed to fetch CSV: Status ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('CSV Fetch failed: $e');
-      throw ServerException();
+      throw Exception('WFP sync failed: $e');
     }
   }
 
