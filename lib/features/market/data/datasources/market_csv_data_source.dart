@@ -31,6 +31,7 @@ class MarketCsvDataSource {
         final dataLines = lines.skip(1);
         final Map<String, MarketPriceModel> deduplicated = {};
         DateTime? maxDate;
+        int rwfRowsCount = 0;
 
         for (var line in dataLines) {
           if (line.trim().isEmpty) continue;
@@ -39,7 +40,6 @@ class MarketCsvDataSource {
           final values = _splitCsvLine(line);
           if (values.length < 14) continue;
 
-          final dateStr = values[0];
           final admin1 = values[1];
           final market = values[3];
           final commodity = values[7];
@@ -47,9 +47,11 @@ class MarketCsvDataSource {
           final priceType = values[10];
           final currency = values[11];
           final priceStr = values[12];
+          final dateStr = values[0];
 
           // Filter out anything that isn't in RWF currency
           if (currency != 'RWF') continue;
+          rwfRowsCount++;
 
           final price = double.tryParse(priceStr) ?? 0.0;
           final date = DateTime.tryParse(dateStr);
@@ -85,6 +87,7 @@ class MarketCsvDataSource {
           }
         }
 
+
         // Save the results into our cache
         _cachedPrices = deduplicated.values.toList();
         _lastUpdated = maxDate;
@@ -95,6 +98,7 @@ class MarketCsvDataSource {
       }
     } catch (e) {
       // If something goes wrong during the process, throw an error
+
       debugPrint('CSV Fetch failed: $e');
       throw Exception('WFP sync failed: $e');
     }
