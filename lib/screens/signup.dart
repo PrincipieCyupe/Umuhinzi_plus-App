@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/utils/page_transitions.dart';
 import '../service/auth_service.dart';
 import 'Welcome/input_screen.dart';
 import 'login.dart';
@@ -100,9 +101,9 @@ class _SignUpState extends State<SignUp> {
 
         // Navigate to input screen
         if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const InputDetails()),
-          );
+          Navigator.of(
+            context,
+          ).pushReplacement(FadeRoute(page: const InputDetails()));
         }
       }
     } catch (e) {
@@ -144,9 +145,9 @@ class _SignUpState extends State<SignUp> {
 
         // Navigate to input screen
         if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const InputDetails()),
-          );
+          Navigator.of(
+            context,
+          ).pushReplacement(FadeRoute(page: const InputDetails()));
         }
       }
     } catch (e) {
@@ -297,8 +298,9 @@ class _SignUpState extends State<SignUp> {
                                     validator: (value) {
                                       final v = (value ?? '').trim();
                                       if (v.isEmpty) return "Name is required";
-                                      if (v.length < 2)
+                                      if (v.length < 2) {
                                         return "Enter a valid name";
+                                      }
                                       return null;
                                     },
                                   ),
@@ -317,8 +319,9 @@ class _SignUpState extends State<SignUp> {
                                     validator: (value) {
                                       final v = (value ?? '').trim();
                                       if (v.isEmpty) return "Email is required";
-                                      if (!_isValidEmail(v))
+                                      if (!_isValidEmail(v)) {
                                         return "Enter a valid email";
+                                      }
                                       return null;
                                     },
                                   ),
@@ -372,10 +375,12 @@ class _SignUpState extends State<SignUp> {
                                     ),
                                     validator: (value) {
                                       final v = (value ?? '').trim();
-                                      if (v.isEmpty)
+                                      if (v.isEmpty) {
                                         return "Confirm your password";
-                                      if (v != _passCtrl.text.trim())
+                                      }
+                                      if (v != _passCtrl.text.trim()) {
                                         return "Passwords do not match";
+                                      }
                                       return null;
                                     },
                                   ),
@@ -507,9 +512,8 @@ class _SignUpState extends State<SignUp> {
                                       TextButton(
                                         onPressed: () {
                                           Navigator.of(context).pushReplacement(
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const LoginScreen(),
+                                            FadeRoute(
+                                              page: const LoginScreen(),
                                             ),
                                           );
                                         },

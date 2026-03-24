@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 
 import '../core/constants/rwanda_data.dart';
+import '../core/utils/page_transitions.dart';
 import '../data/repositories/weather_repository.dart';
 import '../data/services/weather_service.dart';
 import '../presentation/blocs/weather/weather_bloc.dart';
@@ -178,7 +179,7 @@ class _HomeContentState extends State<HomeContent> {
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Image.asset('lib/images/logo.png', width: 20, height: 20,),
+            child: Image.asset('lib/images/logo.png', width: 20, height: 20),
           ),
         ],
       ),
@@ -195,17 +196,14 @@ class _HomeContentState extends State<HomeContent> {
           if (context.mounted) {
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
+              FadeRoute(page: const LoginScreen()),
               (route) => false,
             );
           }
         },
         onUpdateProfile: () {
           Navigator.pop(context);
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const InputDetails()),
-          );
+          Navigator.push(context, SlideUpRoute(page: const InputDetails()));
         },
       ),
       body: SafeArea(child: screens.elementAt(_selectedIndex)),
