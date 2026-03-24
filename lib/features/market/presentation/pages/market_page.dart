@@ -10,7 +10,7 @@ import '../widgets/market_search_bar.dart';
 import '../widgets/produce_card.dart';
 import '../widgets/market_price_section.dart';
 import '../cubit/market_price_cubit.dart';
-import '../../data/datasources/wfp_price_datasource.dart';
+import '../../data/datasources/market_csv_data_source.dart';
 import '../../data/datasources/market_price_firestore_source.dart';
 import '../../data/repositories/market_price_repository_impl.dart';
 
@@ -24,16 +24,16 @@ class MarketPage extends StatefulWidget {
 
 class _MarketPageState extends State<MarketPage> {
   late final FirebaseFirestore firestore;
-  late final WfpPriceDataSource wfpDataSource;
+  late final MarketCsvDataSource csvDataSource;
   late final MarketPriceRepositoryImpl repository;
 
   @override
   void initState() {
     super.initState();
     firestore = FirebaseFirestore.instance;
-    wfpDataSource = WfpPriceDataSource(client: http.Client(), firestore: firestore);
+    csvDataSource = MarketCsvDataSource(client: http.Client());
     repository = MarketPriceRepositoryImpl(
-      wfpDataSource: wfpDataSource,
+      csvDataSource: csvDataSource,
       firestoreSource: MarketPriceFirestoreSource(firestore: firestore),
     );
   }
@@ -81,7 +81,12 @@ class _MarketPageState extends State<MarketPage> {
           }
 
           return SafeArea(
-            child: Column(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                context.read<MarketBloc>().add(const LoadProduceEvent()); // Refresh Firestore data
+                await repository.syncPrices(); // Refresh CSV data
+              },
+              child: Column(
               children: [
                 // Search Bar
                 MarketSearchBar(
@@ -98,7 +103,28 @@ class _MarketPageState extends State<MarketPage> {
                     );
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                // Last updated timestamp
+                BlocBuilder<MarketPriceCubit, MarketPriceState>(
+                  builder: (context, priceState) {
+                    String dateStr = '--';
+                    if (priceState is MarketPriceLoaded) {
+                      dateStr = priceState.lastUpdated;
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Prices updated: $dateStr',
+                            style: const TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
                 // Live WFP Market Prices Section
                 const Expanded(
                   flex: 3,
@@ -112,6 +138,7 @@ class _MarketPageState extends State<MarketPage> {
                 ),
               ],
             ),
+          );
           );
         },
       ),
