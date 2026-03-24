@@ -14,7 +14,7 @@ import '../../data/datasources/market_csv_data_source.dart';
 import '../../data/datasources/market_price_firestore_source.dart';
 import '../../data/repositories/market_price_repository_impl.dart';
 
-/// The main Market screen page.
+// The main Market screen where users can see crop prices
 class MarketPage extends StatefulWidget {
   const MarketPage({super.key});
 
@@ -27,6 +27,7 @@ class _MarketPageState extends State<MarketPage> {
   late final MarketCsvDataSource csvDataSource;
   late final MarketPriceRepositoryImpl repository;
 
+  // We set up the database and data sources when the page first loads
   @override
   void initState() {
     super.initState();
@@ -82,6 +83,7 @@ class _MarketPageState extends State<MarketPage> {
 
           return SafeArea(
             child: RefreshIndicator(
+              // Allow users to pull down to refresh both Firestore and CSV data
               onRefresh: () async {
                 context.read<MarketBloc>().add(LoadProduceByCategoryEvent(activeCategory)); // Refresh Firestore data
                 await repository.syncPrices(); // Refresh CSV data
@@ -104,7 +106,7 @@ class _MarketPageState extends State<MarketPage> {
                   },
                 ),
                 const SizedBox(height: 8),
-                // Last updated timestamp
+                // This part shows when the prices were last updated from the source
                 BlocBuilder<MarketPriceCubit, MarketPriceState>(
                   builder: (context, priceState) {
                     String dateStr = '--';
@@ -181,3 +183,4 @@ class _MarketPageState extends State<MarketPage> {
     return const Center(child: Text('Please select a category or search.'));
   }
 }
+
