@@ -51,12 +51,13 @@ class MarketCsvDataSource {
           final date = DateTime.tryParse(dateStr);
           
           if (date != null) {
-            if (maxDate == null || date.isAfter(maxDate!)) {
+            if (maxDate == null || date.isAfter(maxDate)) {
               maxDate = date;
             }
           }
 
-          final category = _determineCategory('$commodity $categoryStr');
+          // Determine category according to user mapping logic if needed later
+          _determineCategory('$commodity $categoryStr');
           // Note: imageUrl, isAvailable, category mappings match user reqs but MarketPriceModel only has specific fields. 
           // We map to it strictly based on what WfpPriceDataSource returns.
 
