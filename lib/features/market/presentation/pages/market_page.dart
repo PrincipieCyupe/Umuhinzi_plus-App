@@ -126,17 +126,9 @@ class _MarketPageState extends State<MarketPage> {
                     );
                   },
                 ),
-                const SizedBox(height: 8),
                 // Live WFP Market Prices Section
                 const Expanded(
-                  flex: 3,
                   child: MarketPriceSection(),
-                ),
-                const Divider(height: 32, thickness: 2),
-                // Produce Grid (Firestore catalogue)
-                Expanded(
-                  flex: 4,
-                  child: _buildGrid(context, state, currency),
                 ),
               ],
             ),
