@@ -74,11 +74,9 @@ class _MarketPageState extends State<MarketPage> {
         },
         builder: (context, state) {
           String activeCategory = 'All';
-          String currency = 'RWF';
 
           if (state is MarketLoaded) {
             activeCategory = state.activeCategory;
-            currency = state.currency;
           }
 
           return SafeArea(
@@ -138,41 +136,4 @@ class _MarketPageState extends State<MarketPage> {
       ),
     );
   }
-
-  Widget _buildGrid(BuildContext context, MarketState state, String currency) {
-    if (state is MarketLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (state is MarketLoaded) {
-      if (state.produceList.isEmpty) {
-        return const Center(child: Text('No produce found.'));
-      }
-
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final isLandscape = constraints.maxWidth > 600;
-          return GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isLandscape ? 3 : 2,
-              childAspectRatio: 0.8,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: state.produceList.length,
-            itemBuilder: (context, index) {
-              return ProduceCard(
-                produce: state.produceList[index],
-                currency: currency,
-              );
-            },
-          );
-        },
-      );
-    }
-
-    return const Center(child: Text('Please select a category or search.'));
-  }
 }
-
