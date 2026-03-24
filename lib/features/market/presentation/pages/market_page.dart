@@ -83,7 +83,7 @@ class _MarketPageState extends State<MarketPage> {
           return SafeArea(
             child: RefreshIndicator(
               onRefresh: () async {
-                context.read<MarketBloc>().add(const LoadProduceEvent()); // Refresh Firestore data
+                context.read<MarketBloc>().add(LoadProduceEvent()); // Refresh Firestore data
                 await repository.syncPrices(); // Refresh CSV data
               },
               child: Column(
@@ -138,7 +138,8 @@ class _MarketPageState extends State<MarketPage> {
                 ),
               ],
             ),
-          );
+          ),
+        );
         },
       ),
     );
