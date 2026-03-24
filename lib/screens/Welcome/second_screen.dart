@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:umuhinzi_plus/core/utils/page_transitions.dart';
 import 'third_screen.dart';
 import '../Custom/backgroundimage.dart';
 import '../login.dart';
@@ -85,9 +86,7 @@ class SecondScreen extends StatelessWidget {
                             ),
                             onPressed: () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const ThirdScreen(),
-                                ),
+                                SlideRightRoute(page: const ThirdScreen()),
                               );
                             },
                             child: const Text(
@@ -113,9 +112,7 @@ class SecondScreen extends StatelessWidget {
                             ),
                             onPressed: () {
                               Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
+                                FadeRoute(page: const LoginScreen()),
                               );
                             },
                             child: const Text(

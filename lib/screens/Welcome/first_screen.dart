@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:umuhinzi_plus/screens/Welcome/second_screen.dart';
+import 'package:umuhinzi_plus/core/utils/page_transitions.dart';
 import '../Custom/backgroundimage.dart';
 
 void main() {
@@ -93,11 +94,9 @@ class FirstScreen extends StatelessWidget {
                             elevation: 0,
                           ),
                           onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const SecondScreen(),
-                              ),
-                            );
+                            Navigator.of(
+                              context,
+                            ).push(SlideRightRoute(page: const SecondScreen()));
                           },
                           child: const Text(
                             "Get started",

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:umuhinzi_plus/core/utils/page_transitions.dart';
 import '../Custom/backgroundimage.dart';
 import '../login.dart';
 
@@ -71,9 +72,7 @@ class _WelcomeScreenContentState extends State<WelcomeScreenContent> {
                         ),
                         onPressed: () {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
+                            FadeRoute(page: const LoginScreen()),
                           );
                         },
                         child: const Text(
