@@ -1,130 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:umuhinzi_plus/firebase_options.dart';
-import 'package:umuhinzi_plus/features/home/presentation/bloc/navigation_cubit.dart';
-import 'package:umuhinzi_plus/features/market/data/datasources/market_remote_data_source.dart';
-import 'package:umuhinzi_plus/features/market/data/datasources/preferences_service.dart';
-import 'package:umuhinzi_plus/features/market/data/repositories/market_repository_impl.dart';
-import 'package:umuhinzi_plus/features/market/domain/usecases/add_produce.dart';
-import 'package:umuhinzi_plus/features/market/domain/usecases/delete_produce.dart';
-import 'package:umuhinzi_plus/features/market/domain/usecases/get_produce_by_category.dart';
-import 'package:umuhinzi_plus/features/market/domain/usecases/search_produce.dart';
-import 'package:umuhinzi_plus/features/market/domain/usecases/update_produce.dart';
-import 'package:umuhinzi_plus/features/market/presentation/bloc/market_bloc.dart';
-import 'package:umuhinzi_plus/features/market/presentation/pages/market_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
+
+import 'firebase_options.dart';
+import 'features/home/screens/Welcome/first_screen.dart';
+import 'features/home/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
-  }
+  // Initialize Firebase with options from firebase_options.dart
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  final sharedPrefs = await SharedPreferences.getInstance();
-  runApp(Home(sharedPreferences: sharedPrefs));
+  runApp(
+     MaterialApp(debugShowCheckedModeBanner: false, home: AuthWrapper(), theme: ThemeData(textTheme: GoogleFonts.sourceSans3TextTheme())),
+  );
 }
 
-class Home extends StatelessWidget {
-  final SharedPreferences sharedPreferences;
-
-  const Home({super.key, required this.sharedPreferences});
+/// AuthWrapper - Handles auth state and redirects to appropriate screen
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final firestore = FirebaseFirestore.instance;
-    final remoteDataSource = MarketRemoteDataSourceImpl(firestore: firestore);
-    final repository = MarketRepositoryImpl(remoteDataSource: remoteDataSource);
-    final preferencesService = PreferencesService(
-      sharedPreferences: sharedPreferences,
-    );
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // Show loading while checking auth state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Color(0xFF0C4D32),
+            body: Center(
+              child: CircularProgressIndicator(color: Color(0xFF3FAE4A)),
+            ),
+          );
+        }
 
-    final getProduceByCat = GetProduceByCategory(repository);
-    final searchProd = SearchProduce(repository);
-    final addProd = AddProduce(repository);
-    final updateProd = UpdateProduce(repository);
-    final deleteProd = DeleteProduce(repository);
+        // If user is logged in, go to home, otherwise go to first screen
+        if (snapshot.hasData && snapshot.data != null) {
+          return const Home();
+        }
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<NavigationCubit>(create: (_) => NavigationCubit()),
-        BlocProvider<MarketBloc>(
-          create: (context) => MarketBloc(
-            getProduceByCategory: getProduceByCat,
-            searchProduce: searchProd,
-            addProduce: addProd,
-            updateProduce: updateProd,
-            deleteProduce: deleteProd,
-            preferencesService: preferencesService,
-          ),
-        ),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(textTheme: GoogleFonts.sourceSans3TextTheme()),
-        home: const HomeContent(),
-        routes: {'/market': (_) => const MarketPage()},
-      ),
-    );
-  }
-}
-
-class HomeContent extends StatelessWidget {
-  const HomeContent({super.key});
-
-  static List<TextStyle> appstyle = [
-    const TextStyle(fontWeight: FontWeight.bold),
-    const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-  ];
-
-  static List<String> items = ["Home", "Weather", "Market", "Tips & Updates"];
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> laterwidgets = [
-      Text("Future home page", style: appstyle[1]),
-      Text("Future Weather page", style: appstyle[1]),
-      const MarketPage(),
-      Text("Future Tips and Update page", style: appstyle[1]),
-    ];
-
-    return BlocBuilder<NavigationCubit, int>(
-      builder: (context, selectedIndex) {
-        return Scaffold(
-          body: Center(child: laterwidgets.elementAt(selectedIndex)),
-          bottomNavigationBar: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home),
-                label: items[0],
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.wb_sunny),
-                label: items[1],
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.trending_up),
-                label: items[2],
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.lightbulb),
-                label: items[3],
-              ),
-            ],
-            currentIndex: selectedIndex,
-            onTap: (index) => context.read<NavigationCubit>().navigateTo(index),
-            unselectedItemColor: Colors.green,
-            selectedItemColor: Colors.orangeAccent,
-          ),
-        );
+        return const FirstScreen();
       },
     );
   }
