@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,6 +18,18 @@ import 'Custom/app_drawer.dart';
 import 'Welcome/input_screen.dart';
 import 'login.dart';
 
+// Market imports
+import '../../../features/market/data/datasources/market_remote_data_source.dart';
+import '../../../features/market/data/datasources/preferences_service.dart';
+import '../../../features/market/data/repositories/market_repository_impl.dart';
+import '../../../features/market/domain/usecases/add_produce.dart';
+import '../../../features/market/domain/usecases/delete_produce.dart';
+import '../../../features/market/domain/usecases/get_produce_by_category.dart';
+import '../../../features/market/domain/usecases/search_produce.dart';
+import '../../../features/market/domain/usecases/update_produce.dart';
+import '../../../features/market/presentation/bloc/market_bloc.dart';
+import '../../../features/market/presentation/pages/market_page.dart';
+
 void main() {
   runApp(const Home());
 }
@@ -28,30 +41,80 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => WeatherBloc(
-            weatherRepository: WeatherRepository(
-              weatherService: WeatherService(),
+    return FutureBuilder<SharedPreferences>(
+      future: SharedPreferences.getInstance(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              textTheme: GoogleFonts.sourceSans3TextTheme(),
+              scaffoldBackgroundColor: Colors.white,
+            ),
+            home: const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF3FAE4A),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final sharedPreferences = snapshot.data!;
+        final firestore = FirebaseFirestore.instance;
+        final remoteDataSource =
+        MarketRemoteDataSourceImpl(firestore: firestore);
+        final repository =
+        MarketRepositoryImpl(remoteDataSource: remoteDataSource);
+        final preferencesService = PreferencesService(
+          sharedPreferences: sharedPreferences,
+        );
+
+        final getProduceByCategory = GetProduceByCategory(repository);
+        final searchProduce = SearchProduce(repository);
+        final addProduce = AddProduce(repository);
+        final updateProduce = UpdateProduce(repository);
+        final deleteProduce = DeleteProduce(repository);
+
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => WeatherBloc(
+                weatherRepository: WeatherRepository(
+                  weatherService: WeatherService(),
+                ),
+              ),
+            ),
+            BlocProvider(
+              create: (context) => MarketBloc(
+                getProduceByCategory: getProduceByCategory,
+                searchProduce: searchProduce,
+                addProduce: addProduce,
+                updateProduce: updateProduce,
+                deleteProduce: deleteProduce,
+                preferencesService: preferencesService,
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: HomeContent(selectedDistrict: selectedDistrict),
+            theme: ThemeData(
+              textTheme: GoogleFonts.sourceSans3TextTheme(),
+              scaffoldBackgroundColor: Colors.white,
             ),
           ),
-        ),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: const HomeContent(),
-        theme: ThemeData(
-          textTheme: GoogleFonts.sourceSans3TextTheme(),
-          scaffoldBackgroundColor: Colors.white,
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
 class HomeContent extends StatefulWidget {
-  const HomeContent({super.key});
+  final String? selectedDistrict;
+
+  const HomeContent({super.key, this.selectedDistrict});
 
   @override
   State<HomeContent> createState() => _HomeContentState();
@@ -105,8 +168,7 @@ class _HomeContentState extends State<HomeContent> {
   }
 
   String _getSelectedDistrict() {
-    final homeWidget = context.findAncestorWidgetOfExactType<Home>();
-    return homeWidget?.selectedDistrict ?? _selectedDistrict;
+    return widget.selectedDistrict ?? _selectedDistrict;
   }
 
   void _fetchWeatherForDistrict(String district) {
@@ -124,7 +186,7 @@ class _HomeContentState extends State<HomeContent> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> screens = [
+    final List<Widget> screens = [
       HomeTab(onCategoryTap: _onTapped),
       const Center(
         child: Text(
@@ -132,12 +194,7 @@ class _HomeContentState extends State<HomeContent> {
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
       ),
-      const Center(
-        child: Text(
-          "Market Page",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-      ),
+      const MarketPage(),
       const Center(
         child: Text(
           "Tips & Updates Page",
@@ -197,7 +254,7 @@ class _HomeContentState extends State<HomeContent> {
             Navigator.pushAndRemoveUntil(
               context,
               FadeRoute(page: const LoginScreen()),
-              (route) => false,
+                  (route) => false,
             );
           }
         },
@@ -233,7 +290,10 @@ class _HomeContentState extends State<HomeContent> {
             activeIcon: Icon(Icons.wb_sunny),
             label: "Weather",
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Market"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: "Market",
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.lightbulb_outline),
             activeIcon: Icon(Icons.lightbulb),
@@ -407,7 +467,10 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                     Text(
                       "Overview of market trends",
-                      style: TextStyle(color: Color(0xFF3FAE4A), fontSize: 14),
+                      style: TextStyle(
+                        color: Color(0xFF3FAE4A),
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
@@ -487,10 +550,10 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildCategoryPill(
-    String text, {
-    bool isSelected = false,
-    VoidCallback? onTap,
-  }) {
+      String text, {
+        bool isSelected = false,
+        VoidCallback? onTap,
+      }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -564,7 +627,7 @@ class _HomeTabState extends State<HomeTab> {
               fit: BoxFit.cover,
               alignment: Alignment.centerRight,
               errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.image, size: 50, color: Colors.grey),
+              const Icon(Icons.image, size: 50, color: Colors.grey),
             ),
           ),
         ],
@@ -573,11 +636,11 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildMarketItem(
-    String name,
-    String location,
-    String price,
-    bool isUp,
-  ) {
+      String name,
+      String location,
+      String price,
+      bool isUp,
+      ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -648,12 +711,12 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildGridItem(
-    BuildContext context,
-    String title,
-    String subtitle,
-    String imagePath,
-    int targetIndex,
-  ) {
+      BuildContext context,
+      String title,
+      String subtitle,
+      String imagePath,
+      int targetIndex,
+      ) {
     return GestureDetector(
       onTap: () {
         context.findAncestorStateOfType<_HomeContentState>()?._onTapped(
