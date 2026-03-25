@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:umuhinzi_plus/core/utils/page_transitions.dart';
 import '../Custom/backgroundimage.dart';
 import '../login.dart';
-
 void main() {
   runApp(const WelcomeScreen());
 }
