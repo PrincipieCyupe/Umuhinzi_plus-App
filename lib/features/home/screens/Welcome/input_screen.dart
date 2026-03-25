@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../core/constants/rwanda_data.dart';
-import '../../core/utils/page_transitions.dart';
-import '../../presentation/blocs/input_details/input_details_bloc.dart';
-import '../../presentation/blocs/input_details/input_details_event.dart';
-import '../../presentation/blocs/input_details/input_details_state.dart';
+import '../../../../core/constants/rwanda_data.dart';
+import '../../../../core/utils/page_transitions.dart';
+import '../../presentation/bloc/input_details/input_details_bloc.dart';
+import '../../presentation/bloc/input_details/input_details_event.dart';
+import '../../presentation/bloc/input_details/input_details_state.dart';
 import '../home_screen.dart';
 
 void main() {

@@ -5,13 +5,13 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 
-import '../core/constants/rwanda_data.dart';
-import '../core/utils/page_transitions.dart';
+import '../../../core/constants/rwanda_data.dart';
+import '../../../core/utils/page_transitions.dart';
 import '../data/repositories/weather_repository.dart';
 import '../data/services/weather_service.dart';
-import '../presentation/blocs/weather/weather_bloc.dart';
-import '../presentation/blocs/weather/weather_event.dart';
-import '../presentation/blocs/weather/weather_state.dart';
+import '../presentation/bloc/weather/weather_bloc.dart';
+import '../presentation/bloc/weather/weather_event.dart';
+import '../presentation/bloc/weather/weather_state.dart';
 import '../service/auth_service.dart';
 import 'Custom/app_drawer.dart';
 import 'Welcome/input_screen.dart';

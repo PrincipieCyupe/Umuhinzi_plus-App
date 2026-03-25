@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
 
 import 'firebase_options.dart';
-import 'screens/Welcome/first_screen.dart';
-import 'screens/home_screen.dart';
+import 'features/home/screens/Welcome/first_screen.dart';
+import 'features/home/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

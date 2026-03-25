@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:umuhinzi_plus/screens/Welcome/second_screen.dart';
+import '../../screens/Welcome/second_screen.dart';
 import 'package:umuhinzi_plus/core/utils/page_transitions.dart';
 import '../Custom/backgroundimage.dart';
 

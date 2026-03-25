@@ -1,4 +1,4 @@
-import '../../core/constants/rwanda_data.dart';
+import '../../../../core/constants/rwanda_data.dart';
 import '../../domain/entities/weather_entity.dart';
 import '../services/weather_service.dart';
 
