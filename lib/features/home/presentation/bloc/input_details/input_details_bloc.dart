@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/constants/rwanda_data.dart';
+import '../../../../../../core/constants/rwanda_data.dart';
 import 'input_details_event.dart';
 import 'input_details_state.dart';
 

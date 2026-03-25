@@ -19,8 +19,6 @@ class LocalStorageService {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  // ==================== Farm Details ====================
-
   /// Save selected crop
   Future<bool> setSelectedCrop(String crop) async {
     return await _prefs.setString(_keySelectedCrop, crop);
@@ -78,8 +76,6 @@ class LocalStorageService {
     return true;
   }
 
-  // ==================== Onboarding ====================
-
   /// Set onboarding complete status
   Future<bool> setOnboardingComplete(bool complete) async {
     return await _prefs.setBool(_keyIsOnboardingComplete, complete);
@@ -90,9 +86,7 @@ class LocalStorageService {
     return _prefs.getBool(_keyIsOnboardingComplete) ?? false;
   }
 
-  // ==================== Language ====================
-
-  /// Set language preference (en, rw, fr)
+  /// Set language preference (en, rw, fr) - may be gotten rid later
   Future<bool> setLanguage(String languageCode) async {
     return await _prefs.setString(_keyLanguage, languageCode);
   }
@@ -101,8 +95,6 @@ class LocalStorageService {
   String getLanguage() {
     return _prefs.getString(_keyLanguage) ?? 'en';
   }
-
-  // ==================== User Info ====================
 
   /// Save user email
   Future<bool> setUserEmail(String email) async {

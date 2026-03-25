@@ -1,28 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:umuhinzi_plus/core/utils/page_transitions.dart';
+import 'third_screen.dart';
 import '../Custom/backgroundimage.dart';
-import 'welcome_screen.dart';
 import '../login.dart';
 
 void main() {
-  runApp(const ScreenThree());
+  runApp(const ScreenTwo());
 }
 
-class ScreenThree extends StatelessWidget {
-  const ScreenThree({super.key});
+class ScreenTwo extends StatelessWidget {
+  const ScreenTwo({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(textTheme: GoogleFonts.sourceSans3TextTheme()),
-      home: const ThirdScreen(),
+      home: const SecondScreen(),
     );
   }
 }
 
-class ThirdScreen extends StatelessWidget {
-  const ThirdScreen({super.key});
+class SecondScreen extends StatelessWidget {
+  const SecondScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -54,19 +55,18 @@ class ThirdScreen extends StatelessWidget {
                           height: 1.4,
                         ),
                         children: [
-                          TextSpan(text: "Access easy-to-follow "),
+                          TextSpan(text: "Access expert "),
                           TextSpan(
-                            text: "farming tips",
+                            text: "agricultural guidance",
                             style: TextStyle(color: Color(0xFFFFF000)),
                           ),
-                          TextSpan(text: " and "),
+                          TextSpan(text: " tailored to your needs, ensuring "),
                           TextSpan(
-                            text: "best practices",
+                            text: "optimal productivity",
                             style: TextStyle(color: Color(0xFFFFF000)),
                           ),
                           TextSpan(
-                            text:
-                                " that supports healthy crops, reduce losses, and improve overall harvest results using, real-world advices. ",
+                            text: " and success in your farming endeavors.",
                           ),
                         ],
                       ),
@@ -85,10 +85,8 @@ class ThirdScreen extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             onPressed: () {
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (context) => const WelcomeScreen(),
-                                ),
+                              Navigator.of(context).push(
+                                SlideRightRoute(page: const ThirdScreen()),
                               );
                             },
                             child: const Text(
@@ -114,9 +112,7 @@ class ThirdScreen extends StatelessWidget {
                             ),
                             onPressed: () {
                               Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
+                                FadeRoute(page: const LoginScreen()),
                               );
                             },
                             child: const Text(
