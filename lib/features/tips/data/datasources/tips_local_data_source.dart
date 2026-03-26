@@ -1,14 +1,15 @@
 import '../models/tip_model.dart';
 
-// Local data source - provides hardcoded farming tips for Rwanda
+// This is where we keep our hardcoded list of tips for the app
 abstract class TipsLocalDataSource {
+  // Get all the tips we have saved
   Future<List<TipModel>> getTips();
 }
 
 class TipsLocalDataSourceImpl implements TipsLocalDataSource {
   @override
   Future<List<TipModel>> getTips() async {
-    // Return hardcoded list of tips as requested
+    // Return a list of 8 realistic farming tips for Rwanda
     return [
       TipModel(
         id: '1',

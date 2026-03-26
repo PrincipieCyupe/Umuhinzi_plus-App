@@ -1,7 +1,7 @@
 import '../entities/tip_entity.dart';
 import '../repositories/tips_repository.dart';
 
-// GetTips usecase - handles fetching and filtering logic
+// This usecase is specifically for getting tips from the repository
 class GetTips {
   final TipsRepository repository;
 

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-// Tip entity - base class for agricultural tips
+// This is the base data for a tip, like its id and title
 class TipEntity extends Equatable {
   final String id;
   final String title;

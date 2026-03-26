@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// CategoryTabBar - tabs to filter tips by type
+// These are the buttons to switch between All, Post, Video, and Article
 class CategoryTabBar extends StatelessWidget {
   final String selectedCategory;
   final Function(String) onCategorySelected;

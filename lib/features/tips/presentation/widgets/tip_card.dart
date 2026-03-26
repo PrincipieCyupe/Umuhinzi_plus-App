@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/entities/tip_entity.dart';
 
-// TipCard - shows a summary of a farming tip
+// This is a card that shows a tip with its image and title
 class TipCard extends StatelessWidget {
   final TipEntity tip;
   final VoidCallback onTap;

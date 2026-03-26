@@ -7,7 +7,7 @@ import '../widgets/tips_search_bar.dart';
 import '../widgets/category_tab_bar.dart';
 import '../widgets/tip_card.dart';
 
-// TipsPage - main screen for exploring farming tips and agriculture news
+// This is the main screen where farmers can find tips and news
 class TipsPage extends StatelessWidget {
   const TipsPage({super.key});
 
@@ -18,7 +18,7 @@ class TipsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search bar at the top
+          // This is the search bar at the very top
           TipsSearchBar(
             onSearch: (query) {
               final state = context.read<TipsBloc>().state;

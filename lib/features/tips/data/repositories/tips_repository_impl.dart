@@ -2,7 +2,7 @@ import '../../domain/entities/tip_entity.dart';
 import '../../domain/repositories/tips_repository.dart';
 import '../datasources/tips_local_data_source.dart';
 
-// Repository implementation - connects usecases to data source
+// This class actually gets the tips from our local data source
 class TipsRepositoryImpl implements TipsRepository {
   final TipsLocalDataSource localDataSource;
 

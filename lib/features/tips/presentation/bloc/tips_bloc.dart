@@ -4,7 +4,7 @@ import '../../domain/usecases/get_tips.dart';
 import 'tips_event.dart';
 import 'tips_state.dart';
 
-// TipsBloc - manages the state of the Tips screen
+// This bloc manages the logic for the tips screen
 class TipsBloc extends Bloc<TipsEvent, TipsState> {
   final GetTips getTips;
   List<TipEntity> _allTips = [];

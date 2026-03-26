@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-// Tips events - things that happen on the screen
+// These are the things that can happen in the tips screen, like loading or filtering
 abstract class TipsEvent extends Equatable {
   const TipsEvent();
 

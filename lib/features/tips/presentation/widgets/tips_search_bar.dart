@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// TipsSearchBar - real-time search for crop topics or news
+// This is a simple search bar that helps users find specific topics
 class TipsSearchBar extends StatelessWidget {
   final Function(String) onSearch;
 

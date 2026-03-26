@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/tip_entity.dart';
 
-// Tips states - shows what is happening in the UI
+// These represent what we show on the screen, like a loading spinner or the list of tips
 abstract class TipsState extends Equatable {
   const TipsState();
 

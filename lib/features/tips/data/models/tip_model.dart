@@ -1,6 +1,6 @@
 import '../entities/tip_entity.dart';
 
-// Tip model - extends entity with JSON support
+// This model helps us convert tip data to and from JSON
 class TipModel extends TipEntity {
   const TipModel({
     required super.id,
