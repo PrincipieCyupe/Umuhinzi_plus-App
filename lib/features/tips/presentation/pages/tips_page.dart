@@ -7,6 +7,7 @@ import '../bloc/tips_state.dart';
 import '../widgets/tips_search_bar.dart';
 import '../widgets/category_tab_bar.dart';
 import '../widgets/tip_card.dart';
+import 'article_reader_page.dart';
 
 // This is the main screen where farmers can find tips and news
 class TipsPage extends StatelessWidget {
@@ -86,8 +87,29 @@ class TipsPage extends StatelessWidget {
                                   );
                                 }
                               }
+                            } else if (tip.category == 'Post' || tip.category == 'Article') {
+                              // Open article in in-app web view
+                              if (tip.articleUrl != null) {
+                                if (context.mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ArticleReaderPage(
+                                        url: tip.articleUrl!,
+                                        title: tip.title,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Article not available')),
+                                  );
+                                }
+                              }
                             } else {
-                              // Otherwise show the normal details bottom sheet
+                              // Fallback: show details bottom sheet
                               _showTipDetails(context, tip.title, tip.description);
                             }
                           },
