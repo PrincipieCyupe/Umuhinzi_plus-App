@@ -1,4 +1,4 @@
-import '../entities/tip_entity.dart';
+import '../../domain/entities/tip_entity.dart';
 
 // This model helps us convert tip data to and from JSON
 class TipModel extends TipEntity {
@@ -11,19 +11,19 @@ class TipModel extends TipEntity {
     required super.date,
   });
 
-  // Convert JSON to model
+  // This helps us create a tip from a map of data
   factory TipModel.fromJson(Map<String, dynamic> json) {
     return TipModel(
-      id: json['id'],
-      title: json['title'],
-      description: json['description'],
-      imageUrl: json['imageUrl'],
-      category: json['category'],
-      date: DateTime.parse(json['date']),
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      imageUrl: json['imageUrl'] as String,
+      category: json['category'] as String,
+      date: DateTime.parse(json['date'] as String),
     );
   }
 
-  // Convert model to JSON
+  // This converts our tip object back into a map
   Map<String, dynamic> toJson() {
     return {
       'id': id,
