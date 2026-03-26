@@ -293,7 +293,6 @@ class _WeatherPageState extends State<WeatherPage> {
               ),
             );
     } else {
-      // PLACEHOLDERS FOR OTHER TABS
       String label = "";
       if (_selectedIndex == 0) label = "Future Home Page";
       if (_selectedIndex == 2) label = "Future Market Page";
