@@ -42,7 +42,7 @@ class TipsLocalDataSourceImpl implements TipsLocalDataSource {
         title: "Understanding Soil Health for Better Yields",
         description: "Learn how to manage soil pH, use compost, and prepare your land for seasonal planting.",
         body: "Healthy soil is the foundation of a successful farm. In Rwanda, understanding your soil can mean the difference between a poor harvest and an abundant one. Good soil is teeming with organic matter, helpful microbes, and essential nutrients. The first step to improving your land is soil testing. Local agricultural extension offices can help test your soil's pH levels and nutrient deficiencies. Acidic soils, common in many parts of Rwanda, may require the application of agricultural lime to neutralize the acidity and make nutrients available to plants. Composting is one of the most accessible and effective ways to boost soil fertility. By mixing crop residues, animal manure, and kitchen waste, you create nutrient-rich humus that improves soil structure and retains moisture. When using chemical fertilizers, knowing your soil test results ensures you only apply what is needed, saving money and preventing environmental runoff. Seasonal soil preparation, such as minimal tillage and adding organic matter before the rains begin, sets the stage for strong root development and resilient crops.",
-        imageUrl: 'https://images.unsplash.com/photo-1585847406077-2b9b8a7e7bde?w=800',
+        imageUrl: 'https://images.unsplash.com/photo-1663170901490-2d733f00f9ae?auto=format&fit=crop&w=800&q=80',
         category: 'Article',
         date: DateTime.now().subtract(const Duration(days: 4)),
       ),
