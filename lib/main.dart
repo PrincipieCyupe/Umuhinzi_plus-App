@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:umuhinzi_plus/features/weather/weather_page.dart'; 
 
 void main() {
   runApp(const Home());
@@ -32,9 +33,9 @@ class _HomeContentState extends State<HomeContent> {
     TextStyle(fontWeight: FontWeight.bold),
     TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
   ];
-  List<Widget> laterwidgets = [
+  List<Widget> pages = [
     Text("Future home page", style: appstyle[1]),
-    Text("Future Weather page", style: appstyle[1]),
+    WeatherPage(district: "Huye"),
     Text("Future Market page", style: appstyle[1]),
     Text("Future Tips and Update page", style: appstyle[1]),
   ];
@@ -51,7 +52,7 @@ class _HomeContentState extends State<HomeContent> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(),
-      body: Center(child: laterwidgets.elementAt(_selectedIndex)),
+      body: pages[_selectedIndex],
       appBar: AppBar(title: Text("Umuhinzi+", style: appstyle[0]), actions: [Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Image.asset('lib/images/logo.png', width: 20, height: 20,),
