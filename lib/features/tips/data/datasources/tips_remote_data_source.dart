@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../../../../core/config/api_config.dart';
 import '../models/tip_model.dart';
 
-// This class fetches real data from YouTube and NewsAPI
+// This class fetches real data from YouTube and GNews
 abstract class TipsRemoteDataSource {
   Future<List<TipModel>> fetchTips();
 }
@@ -19,7 +19,7 @@ class TipsRemoteDataSourceImpl implements TipsRemoteDataSource {
       // Fetch from both sources
       final results = await Future.wait([
         _fetchYouTubeVideos(),
-        _fetchNewsArticles(),
+        _fetchGNewsArticles(),
       ]);
 
       // Combine and sort by date descending
@@ -56,6 +56,7 @@ class TipsRemoteDataSourceImpl implements TipsRemoteDataSource {
           imageUrl: snippet['thumbnails']['medium']['url'],
           category: 'Video',
           videoUrl: 'https://www.youtube.com/watch?v=$videoId',
+          articleUrl: null,
           date: DateTime.parse(snippet['publishedAt']),
         );
       }).toList();
@@ -64,11 +65,11 @@ class TipsRemoteDataSourceImpl implements TipsRemoteDataSource {
     }
   }
 
-  // Source 2: NewsAPI
-  Future<List<TipModel>> _fetchNewsArticles() async {
+  // Source 2: GNews API
+  Future<List<TipModel>> _fetchGNewsArticles() async {
     final url = Uri.parse(
-      'https://newsapi.org/v2/everything'
-      '?q=agriculture+Rwanda+farming&language=en&sortBy=publishedAt&pageSize=20&apiKey=${ApiConfig.newsApiKey}',
+      'https://gnews.io/api/v4/search'
+      '?q=agriculture+Rwanda+farming&lang=en&max=20&token=${ApiConfig.gNewsApiKey}',
     );
 
     final response = await client.get(url);
@@ -82,17 +83,19 @@ class TipsRemoteDataSourceImpl implements TipsRemoteDataSource {
         final article = entry.value;
 
         return TipModel(
-          id: article['url'],
-          title: article['title'],
-          description: article['description'] ?? '',
-          imageUrl: article['urlToImage'] ?? 'https://placehold.co/400x200/e8f5e9/2e7d32?text=AgriNews',
+          id: article['url'] as String,
+          title: article['title'] as String,
+          description: (article['description'] as String?) ?? '',
+          imageUrl: (article['image'] as String?) ??
+              'https://placehold.co/400x200/e8f5e9/2e7d32?text=AgriNews',
           category: index % 2 == 0 ? 'Post' : 'Article',
           videoUrl: null,
-          date: DateTime.parse(article['publishedAt']),
+          articleUrl: article['url'] as String,
+          date: DateTime.parse(article['publishedAt'] as String),
         );
       }).toList();
     } else {
-      throw Exception('NewsAPI error: ${response.statusCode}');
+      throw Exception('GNews API error: ${response.statusCode}');
     }
   }
 }
