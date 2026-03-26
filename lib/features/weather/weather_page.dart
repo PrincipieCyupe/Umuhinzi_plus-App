@@ -4,8 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:umuhinzi_plus/core/constants/rwanda_data.dart';
 import 'package:umuhinzi_plus/features/home/data/models/weather_model.dart';
 import 'package:umuhinzi_plus/features/home/data/services/weather_service.dart';
-
-// Import the shared drawer from the home screen project
 import 'package:umuhinzi_plus/features/home/screens/Custom/app_drawer.dart';
 
 class WeatherPage extends StatefulWidget {
@@ -114,10 +112,8 @@ class _WeatherPageState extends State<WeatherPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine what to show in the body based on the navbar index
     Widget bodyContent;
     if (_selectedIndex == 1) {
-      // THIS IS YOUR ORIGINAL WEATHER UI
       bodyContent = _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -306,7 +302,6 @@ class _WeatherPageState extends State<WeatherPage> {
     }
 
     return Scaffold(
-      // 1. Using the teammates' AppDrawer from the Home Screen
       drawer: AppDrawer(
         userEmail: "farmer@umuhinzi.rw", 
         userName: "Umuhinzi User",
@@ -314,7 +309,6 @@ class _WeatherPageState extends State<WeatherPage> {
         onUpdateProfile: () {},
       ),
       appBar: AppBar(
-        // Matching the home screen title style
         title: RichText(
           text: TextSpan(
             style: const TextStyle(
@@ -339,7 +333,6 @@ class _WeatherPageState extends State<WeatherPage> {
         ],
       ),
       body: bodyContent,
-      // 2. Updated Bottom Nav Bar with teammate styling
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
@@ -356,7 +349,6 @@ class _WeatherPageState extends State<WeatherPage> {
     );
   }
 
-  // Your helper methods remain unchanged
   Widget _buildTempRow(String timeLabel, String temp) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
