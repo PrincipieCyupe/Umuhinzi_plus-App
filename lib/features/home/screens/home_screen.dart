@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 
@@ -86,7 +87,11 @@ class Home extends StatelessWidget {
         final deleteProduce = DeleteProduce(repository);
 
         final tipsDataSource = TipsLocalDataSourceImpl();
-        final tipsRepository = TipsRepositoryImpl(localDataSource: tipsDataSource);
+        final tipsRemoteDataSource = TipsRemoteDataSourceImpl(client: http.Client());
+        final tipsRepository = TipsRepositoryImpl(
+          localDataSource: tipsDataSource,
+          remoteDataSource: tipsRemoteDataSource,
+        );
         final getTips = GetTips(tipsRepository);
 
         return MultiBlocProvider(

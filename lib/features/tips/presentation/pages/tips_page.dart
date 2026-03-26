@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/tips_bloc.dart';
 import '../bloc/tips_event.dart';
@@ -72,7 +73,24 @@ class TipsPage extends StatelessWidget {
                         final tip = state.tips[index];
                         return TipCard(
                           tip: tip,
-                          onTap: () => _showTipDetails(context, tip.title, tip.description),
+                          onTap: () async {
+                            // If it's a video, open it in the browser/YouTube app
+                            if (tip.category == 'Video' && tip.videoUrl != null) {
+                              final url = Uri.parse(tip.videoUrl!);
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(url);
+                              } else {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Could not open video")),
+                                  );
+                                }
+                              }
+                            } else {
+                              // Otherwise show the normal details bottom sheet
+                              _showTipDetails(context, tip.title, tip.description);
+                            }
+                          },
                         );
                       },
                     );

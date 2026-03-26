@@ -23,12 +23,27 @@ class TipCard extends StatelessWidget {
             // Image at top, full width
             Expanded(
               flex: 3,
-              child: CachedNetworkImage(
-                imageUrl: tip.imageUrl,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(color: Colors.grey.shade200),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: tip.imageUrl,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(color: Colors.grey.shade200),
+                    errorWidget: (context, url, error) => const Icon(Icons.error),
+                  ),
+                  // If it's a video, show a play button over the image
+                  if (tip.category == 'Video' && tip.videoUrl != null)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(Icons.play_arrow, color: Colors.white, size: 30),
+                    ),
+                ],
               ),
             ),
             // Title and description below image
