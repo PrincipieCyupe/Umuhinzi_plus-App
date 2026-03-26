@@ -7,6 +7,7 @@ class TipEntity extends Equatable {
   final String description;
   final String imageUrl;
   final String category; // 'Post' | 'Video' | 'Article'
+  final String? videoUrl; // Link to YouTube video if available
   final DateTime date;
 
   const TipEntity({
@@ -15,9 +16,10 @@ class TipEntity extends Equatable {
     required this.description,
     required this.imageUrl,
     required this.category,
+    this.videoUrl,
     required this.date,
   });
 
   @override
-  List<Object?> get props => [id, title, description, imageUrl, category, date];
+  List<Object?> get props => [id, title, description, imageUrl, category, videoUrl, date];
 }

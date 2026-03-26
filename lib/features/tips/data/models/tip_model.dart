@@ -8,6 +8,7 @@ class TipModel extends TipEntity {
     required super.description,
     required super.imageUrl,
     required super.category,
+    super.videoUrl,
     required super.date,
   });
 
@@ -19,6 +20,7 @@ class TipModel extends TipEntity {
       description: json['description'] as String,
       imageUrl: json['imageUrl'] as String,
       category: json['category'] as String,
+      videoUrl: json['videoUrl'] as String?,
       date: DateTime.parse(json['date'] as String),
     );
   }
@@ -31,6 +33,7 @@ class TipModel extends TipEntity {
       'description': description,
       'imageUrl': imageUrl,
       'category': category,
+      'videoUrl': videoUrl,
       'date': date.toIso8601String(),
     };
   }
