@@ -7,7 +7,6 @@ import '../bloc/market_event.dart';
 import '../bloc/market_state.dart';
 import '../widgets/category_tab_bar.dart';
 import '../widgets/market_search_bar.dart';
-import '../widgets/produce_card.dart';
 import '../widgets/market_price_section.dart';
 import '../cubit/market_price_cubit.dart';
 import '../../data/datasources/market_csv_data_source.dart';
@@ -87,51 +86,55 @@ class _MarketPageState extends State<MarketPage> {
                 await repository.syncPrices(); // Refresh CSV data
               },
               child: Column(
-              children: [
-                // Search Bar
-                MarketSearchBar(
-                  onSearch: (query) {
-                    context.read<MarketBloc>().add(SearchProduceEvent(query));
-                  },
-                ),
-                // Category Tabs
-                CategoryTabBar(
-                  activeCategory: activeCategory,
-                  onCategorySelected: (category) {
-                    context.read<MarketBloc>().add(
-                      LoadProduceByCategoryEvent(category),
-                    );
-                  },
-                ),
-                const SizedBox(height: 8),
-                // This part shows when the prices were last updated from the source
-                BlocBuilder<MarketPriceCubit, MarketPriceState>(
-                  builder: (context, priceState) {
-                    String dateStr = '--';
-                    if (priceState is MarketPriceLoaded) {
-                      dateStr = priceState.lastUpdated;
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Prices updated: $dateStr',
-                            style: const TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                // Live WFP Market Prices Section
-                const Expanded(
-                  child: MarketPriceSection(),
-                ),
-              ],
+                children: [
+                  // Search Bar
+                  MarketSearchBar(
+                    onSearch: (query) {
+                      context.read<MarketBloc>().add(SearchProduceEvent(query));
+                      // Update Live Prices search results
+                      context.read<MarketPriceCubit>().searchPrices(query);
+                    },
+                  ),
+                  // Category Tabs
+                  CategoryTabBar(
+                    activeCategory: activeCategory,
+                    onCategorySelected: (category) {
+                      context.read<MarketBloc>().add(
+                        LoadProduceByCategoryEvent(category),
+                      );
+                      // Update Live Prices category filter
+                      context.read<MarketPriceCubit>().filterByCategory(category);
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  // This part shows when the prices were last updated from the source
+                  BlocBuilder<MarketPriceCubit, MarketPriceState>(
+                    builder: (context, priceState) {
+                      String dateStr = '--';
+                      if (priceState is MarketPriceLoaded) {
+                        dateStr = priceState.lastUpdated;
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Prices updated: $dateStr',
+                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                  // Live WFP Market Prices Section
+                  const Expanded(
+                    child: MarketPriceSection(),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
+          );
         },
       ),
     );

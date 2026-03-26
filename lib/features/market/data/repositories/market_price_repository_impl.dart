@@ -20,16 +20,46 @@ class MarketPriceRepositoryImpl implements MarketPriceRepository {
     await csvDataSource.fetchAndSync();
   }
 
-  // Watch for price changes and filter them by district if needed
+  // Watch for price changes and filter them by district, category, or search query
   @override
-  Stream<List<MarketPriceModel>> watchPrices({String? district}) {
+  Stream<List<MarketPriceModel>> watchPrices({
+    String? district,
+    String? category,
+    String? searchQuery,
+  }) {
     // We convert the future into a stream so the UI can listen to it
     return Stream.fromFuture(csvDataSource.fetchAndSync().then((_) {
       var prices = csvDataSource.getCachedPrices();
+
+      // Filter by district if one is chosen
       if (district != null && district != 'All') {
-        // If a district is chosen, filter out everything else
         prices = prices.where((p) => p.district == district || p.market == district).toList();
       }
+
+      // Filter by category (commodity name contains category string)
+      if (category != null && category != 'All') {
+        final lowerCategory = category.toLowerCase();
+        prices = prices.where((p) {
+          final commodity = p.commodity.toLowerCase();
+          // Natural matching: e.g. 'Maize' matches 'Grains' indirectly if we had category mapping, 
+          // but for now we match by the category string provided by the tabs.
+          // Since the CSV doesn't have a 'category' column, we match against commodity names.
+          if (lowerCategory == 'grains') return commodity.contains('maize') || commodity.contains('rice') || commodity.contains('wheat') || commodity.contains('sorghum');
+          if (lowerCategory == 'vegetables') return commodity.contains('tomato') || commodity.contains('onion') || commodity.contains('potato') || commodity.contains('cabbage') || commodity.contains('beans');
+          if (lowerCategory == 'fruits') return commodity.contains('banana') || commodity.contains('mango') || commodity.contains('pineapple') || commodity.contains('orange');
+          return true; // Default to showing if no match logic found
+        }).toList();
+      }
+
+      // Search filtering
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        final query = searchQuery.toLowerCase();
+        prices = prices.where((p) => 
+          p.commodity.toLowerCase().contains(query) || 
+          p.market.toLowerCase().contains(query)
+        ).toList();
+      }
+
       return prices;
     }));
   }

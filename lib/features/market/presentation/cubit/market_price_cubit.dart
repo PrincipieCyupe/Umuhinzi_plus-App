@@ -39,6 +39,8 @@ class MarketPriceCubit extends Cubit<MarketPriceState> {
   StreamSubscription<List<MarketPriceModel>>? _pricesSubscription;
   Timer? _syncTimer;
   String? _currentDistrict;
+  String? _currentCategory;
+  String? _currentSearchQuery;
 
   MarketPriceCubit({required this.repository}) : super(MarketPriceInitial()) {
     _init();
@@ -49,7 +51,7 @@ class MarketPriceCubit extends Cubit<MarketPriceState> {
     // Initial sync
     repository.syncPrices();
     
-    // Subscribe to stream (default: All districts)
+    // Subscribe to stream (default: All filters empty)
     _subscribeToStream();
 
     // Start 30-minute periodic sync
@@ -60,13 +62,31 @@ class MarketPriceCubit extends Cubit<MarketPriceState> {
 
   void filterByDistrict(String district) {
     _currentDistrict = district == 'All' ? null : district;
+    _updateFilters();
+  }
+
+  void filterByCategory(String category) {
+    _currentCategory = category == 'All' ? null : category;
+    _updateFilters();
+  }
+
+  void searchPrices(String query) {
+    _currentSearchQuery = query.isEmpty ? null : query;
+    _updateFilters();
+  }
+
+  void _updateFilters() {
     emit(MarketPriceLoading());
     _subscribeToStream();
   }
 
   void _subscribeToStream() {
     _pricesSubscription?.cancel();
-    _pricesSubscription = repository.watchPrices(district: _currentDistrict).listen(
+    _pricesSubscription = repository.watchPrices(
+      district: _currentDistrict,
+      category: _currentCategory,
+      searchQuery: _currentSearchQuery,
+    ).listen(
       (prices) {
         if (prices.isEmpty) {
           emit(const MarketPriceLoaded([], 'N/A'));
