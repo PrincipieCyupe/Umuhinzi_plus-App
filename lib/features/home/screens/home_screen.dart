@@ -30,6 +30,14 @@ import '../../../features/market/domain/usecases/update_produce.dart';
 import '../../../features/market/presentation/bloc/market_bloc.dart';
 import '../../../features/market/presentation/pages/market_page.dart';
 
+// Tips imports
+import '../../../features/tips/data/datasources/tips_local_data_source.dart';
+import '../../../features/tips/data/repositories/tips_repository_impl.dart';
+import '../../../features/tips/domain/usecases/get_tips.dart';
+import '../../../features/tips/presentation/bloc/tips_bloc.dart';
+import '../../../features/tips/presentation/bloc/tips_event.dart';
+import '../../../features/tips/presentation/pages/tips_page.dart';
+
 void main() {
   runApp(const Home());
 }
@@ -77,6 +85,10 @@ class Home extends StatelessWidget {
         final updateProduce = UpdateProduce(repository);
         final deleteProduce = DeleteProduce(repository);
 
+        final tipsDataSource = TipsLocalDataSourceImpl();
+        final tipsRepository = TipsRepositoryImpl(localDataSource: tipsDataSource);
+        final getTips = GetTips(tipsRepository);
+
         return MultiBlocProvider(
           providers: [
             BlocProvider(
@@ -95,6 +107,9 @@ class Home extends StatelessWidget {
                 deleteProduce: deleteProduce,
                 preferencesService: preferencesService,
               ),
+            ),
+            BlocProvider(
+              create: (context) => TipsBloc(getTips: getTips)..add(LoadTips()),
             ),
           ],
           child: MaterialApp(
@@ -195,12 +210,7 @@ class _HomeContentState extends State<HomeContent> {
         ),
       ),
       const MarketPage(),
-      const Center(
-        child: Text(
-          "Tips & Updates Page",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-      ),
+      const TipsPage(),
     ];
 
     return Scaffold(
