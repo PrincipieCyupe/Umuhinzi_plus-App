@@ -31,29 +31,31 @@ class MarketCsvDataSource {
         final dataLines = lines.skip(1);
         final Map<String, MarketPriceModel> deduplicated = {};
         DateTime? maxDate;
+        int rwfRowsCount = 0;
 
         for (var line in dataLines) {
           if (line.trim().isEmpty) continue;
-          
+
           // Parse each line using our custom splitter that handles quotes
           final values = _splitCsvLine(line);
           if (values.length < 14) continue;
 
           final admin1 = values[1];
           final market = values[3];
-          final commodity = values[7];
-          final unit = values[8];
-          final priceType = values[10];
-          final currency = values[11];
-          final priceStr = values[12];
+          final commodity = values[8];
+          final unit = values[10];
+          final priceType = values[12];
+          final currency = values[13];
+          final priceStr = values[14];
           final dateStr = values[0];
 
           // Filter out anything that isn't in RWF currency
           if (currency != 'RWF') continue;
+          rwfRowsCount++;
 
           final price = double.tryParse(priceStr) ?? 0.0;
           final date = DateTime.tryParse(dateStr);
-          
+
           // Keep track of the most recent date we've seen in the file
           if (date != null) {
             if (maxDate == null || date.isAfter(maxDate)) {
@@ -85,11 +87,12 @@ class MarketCsvDataSource {
           }
         }
 
-
         // Save the results into our cache
         _cachedPrices = deduplicated.values.toList();
         _lastUpdated = maxDate;
-        debugPrint('CSV sync successful. Parsed ${_cachedPrices.length} unique records.');
+        debugPrint(
+          'CSV sync successful. Parsed ${_cachedPrices.length} unique records.',
+        );
       } else {
         // If the web request fails, tell us why
         throw Exception('Failed to fetch CSV: Status ${response.statusCode}');
@@ -104,11 +107,9 @@ class MarketCsvDataSource {
 
   // Returns the date when the data was last updated at the source
   DateTime? getLastUpdated() => _lastUpdated;
-  
+
   // Gets the latest list of market prices we have stored
   List<MarketPriceModel> getCachedPrices() => _cachedPrices;
-
-
 
   List<String> _splitCsvLine(String line) {
     final result = <String>[];
@@ -130,4 +131,3 @@ class MarketCsvDataSource {
     return result;
   }
 }
-
