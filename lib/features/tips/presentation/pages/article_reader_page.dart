@@ -1,86 +1,97 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../domain/entities/tip_entity.dart';
 
-/// A page that displays a news article inside an in-app web view.
-class ArticleReaderPage extends StatefulWidget {
-  final String url;
-  final String title;
+class ArticleReaderPage extends StatelessWidget {
+  final TipEntity tip;
 
-  const ArticleReaderPage({super.key, required this.url, required this.title});
+  const ArticleReaderPage({super.key, required this.tip});
 
-  @override
-  State<ArticleReaderPage> createState() => _ArticleReaderPageState();
-}
-
-class _ArticleReaderPageState extends State<ArticleReaderPage> {
-  bool _isLoading = true;
-  bool _hasError = false;
+  String _formatDate(DateTime date) {
+    const monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final day = date.day.toString().padLeft(2, '0');
+    final month = monthNames[date.month - 1];
+    final year = date.year;
+    return "$day $month $year";
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF3FAE4A),
-        foregroundColor: Colors.white,
-        title: Text(
-          widget.title,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-      body: Stack(
-        children: [
-          // Show error message if page failed to load
-          if (_hasError)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.wifi_off, size: 64, color: Colors.grey),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Could not load the article.',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Go Back', style: TextStyle(color: Color(0xFF3FAE4A))),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            InAppWebView(
-              initialUrlRequest: URLRequest(url: WebUri(widget.url)),
-              onLoadStart: (controller, url) {
-                setState(() {
-                  _isLoading = true;
-                  _hasError = false;
-                });
-              },
-              onLoadStop: (controller, url) {
-                setState(() => _isLoading = false);
-              },
-              onReceivedError: (controller, request, error) {
-                setState(() {
-                  _isLoading = false;
-                  _hasError = true;
-                });
-              },
-            ),
-
-          // Loading indicator overlay
-          if (_isLoading && !_hasError)
-            const Center(
-              child: CircularProgressIndicator(color: Color(0xFF3FAE4A)),
-            ),
+        title: Text(tip.title),
+        backgroundColor: Colors.green,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: tip.title));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Title copied to clipboard')),
+              );
+            },
+          ),
         ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CachedNetworkImage(
+              imageUrl: tip.imageUrl,
+              width: double.infinity,
+              height: 220,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                width: double.infinity,
+                height: 220,
+                color: Colors.grey[300],
+              ),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Chip(
+                    label: Text(
+                      tip.category,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _formatDate(tip.date),
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    tip.title,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    tip.body,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      height: 1.7,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
