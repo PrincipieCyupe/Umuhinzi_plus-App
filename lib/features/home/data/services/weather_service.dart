@@ -9,7 +9,7 @@ class WeatherService {
   static const String _baseUrl =
       'https://open-weather13.p.rapidapi.com/fivedaysforcast';
   static const String _apiKey =
-      'a8c3cf7301mshbc7038fce89b4a8p1fc78fjsndb42a59b59f1';
+      'ea028c6133msh9af7cf768a80606p1edd64jsnb9fdfa8ec4fe';
   static const String _apiHost = 'open-weather13.p.rapidapi.com';
 
   // Empty constructor
