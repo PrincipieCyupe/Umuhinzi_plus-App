@@ -22,7 +22,6 @@ class WeatherEntity {
   final DateTime sunset;
   final DateTime dateTime;
 
-  // Added lists for forecasts
   final List<WeatherEntity> hourlyForecast;
   final List<WeatherEntity> dailyForecast;
 
@@ -49,7 +48,7 @@ class WeatherEntity {
     required this.sunset,
     required this.dateTime,
     this.hourlyForecast = const [], // Default to empty list
-    this.dailyForecast = const [],  // Default to empty list
+    this.dailyForecast = const [], 
   });
 
   String get iconUrl => 'https://openweathermap.org/img/wn/$weatherIcon@2x.png';
