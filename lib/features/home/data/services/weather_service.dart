@@ -8,7 +8,6 @@ class WeatherService {
 
   WeatherService();
 
-  // Change return type to Future<Map<String, dynamic>> to keep the forecast list!
   Future<Map<String, dynamic>> getWeatherRawData({
     required double lat,
     required double lon,
