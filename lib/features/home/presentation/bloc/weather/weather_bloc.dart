@@ -43,7 +43,6 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
     _lastDistrictName = location;
 
     try {
-      // Logic Fix: Ensure the parameters match the updated Repository signature
       final weather = await _weatherRepository.getWeatherByCoordinates(
         lat: event.latitude,
         lon: event.longitude,
