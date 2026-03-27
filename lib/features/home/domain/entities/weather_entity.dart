@@ -1,5 +1,4 @@
 /// Weather Entity - Domain Layer
-/// Represents the core weather data structure
 class WeatherEntity {
   final double latitude;
   final double longitude;
@@ -23,6 +22,10 @@ class WeatherEntity {
   final DateTime sunset;
   final DateTime dateTime;
 
+  // Added lists for forecasts
+  final List<WeatherEntity> hourlyForecast;
+  final List<WeatherEntity> dailyForecast;
+
   const WeatherEntity({
     required this.latitude,
     required this.longitude,
@@ -45,26 +48,15 @@ class WeatherEntity {
     required this.sunrise,
     required this.sunset,
     required this.dateTime,
+    this.hourlyForecast = const [], // Default to empty list
+    this.dailyForecast = const [],  // Default to empty list
   });
 
-  /// Get weather icon URL
   String get iconUrl => 'https://openweathermap.org/img/wn/$weatherIcon@2x.png';
-
-  /// Get temperature as formatted string
-  String get temperatureString => '${temperature.toStringAsFixed(1)}°C';
-
-  /// Get feels like as formatted string
+  String get temperatureString => '${temperature.round()}°'; // Changed to round for UI cleaness
   String get feelsLikeString => '${feelsLike.toStringAsFixed(1)}°C';
-
-  /// Get humidity as formatted string
   String get humidityString => '$humidity%';
-
-  /// Get wind speed as formatted string
-  String get windSpeedString => '${windSpeed.toStringAsFixed(1)} m/s';
-
-  /// Get visibility as formatted string (km)
-  String get visibilityString => '${(visibility / 1000).toStringAsFixed(1)} km';
-
-  /// Get cloudiness as formatted string
-  String get cloudsString => '$clouds%';
+  
+  // Updated to km/h to match your UI requirement
+  String get windSpeedString => '${(windSpeed * 3.6).toStringAsFixed(1)} km/h';
 }

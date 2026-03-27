@@ -8,8 +8,8 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
   String? _lastDistrictName;
 
   WeatherBloc({required WeatherRepository weatherRepository})
-    : _weatherRepository = weatherRepository,
-      super(const WeatherInitial()) {
+      : _weatherRepository = weatherRepository,
+        super(const WeatherInitial()) {
     on<FetchWeatherByDistrict>(_onFetchWeatherByDistrict);
     on<FetchWeatherByCoordinates>(_onFetchWeatherByCoordinates);
     on<RefreshWeather>(_onRefreshWeather);
@@ -38,13 +38,16 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
     Emitter<WeatherState> emit,
   ) async {
     emit(const WeatherLoading());
-    _lastDistrictName = event.locationName ?? 'Unknown';
+    // We use the provided location name or fall back to 'Unknown'
+    final location = event.locationName ?? 'Unknown';
+    _lastDistrictName = location;
 
     try {
+      // Logic Fix: Ensure the parameters match the updated Repository signature
       final weather = await _weatherRepository.getWeatherByCoordinates(
         lat: event.latitude,
         lon: event.longitude,
-        locationName: event.locationName ?? 'Unknown',
+        locationName: location// Pass the location name here
       );
       emit(WeatherLoaded(weather: weather));
     } catch (e) {
@@ -56,6 +59,7 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
     RefreshWeather event,
     Emitter<WeatherState> emit,
   ) async {
+    // If we have a district name, re-trigger the fetch logic
     if (_lastDistrictName != null) {
       add(FetchWeatherByDistrict(districtName: _lastDistrictName!));
     }
