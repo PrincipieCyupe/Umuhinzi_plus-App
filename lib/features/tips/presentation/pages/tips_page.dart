@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/tips_bloc.dart';
 import '../bloc/tips_event.dart';
@@ -8,6 +7,7 @@ import '../widgets/tips_search_bar.dart';
 import '../widgets/category_tab_bar.dart';
 import '../widgets/tip_card.dart';
 import 'article_reader_page.dart';
+import 'video_player_page.dart';
 
 // This is the main screen where farmers can find tips and news
 class TipsPage extends StatelessWidget {
@@ -74,40 +74,28 @@ class TipsPage extends StatelessWidget {
                         final tip = state.tips[index];
                         return TipCard(
                           tip: tip,
-                          onTap: () async {
-                            // If it's a video, open it in the browser/YouTube app
-                            if (tip.category == 'Video' && tip.videoUrl != null) {
-                              final url = Uri.parse(tip.videoUrl!);
-                              if (await canLaunchUrl(url)) {
-                                await launchUrl(url);
-                              } else {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Could not open video")),
-                                  );
-                                }
-                              }
+                          onTap: () {
+                            // If it's a video, open it in the VideoPlayerPage
+                            if (tip.category == 'Video' && tip.videoId != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VideoPlayerPage(
+                                    videoId: tip.videoId!,
+                                    title: tip.title,
+                                  ),
+                                ),
+                              );
                             } else if (tip.category == 'Post' || tip.category == 'Article') {
-                              // Open article in in-app web view
-                              if (tip.articleUrl != null) {
-                                if (context.mounted) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => ArticleReaderPage(
-                                        url: tip.articleUrl!,
-                                        title: tip.title,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              } else {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Article not available')),
-                                  );
-                                }
-                              }
+                              // Open article in native reader page
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ArticleReaderPage(
+                                    tip: tip,
+                                  ),
+                                ),
+                              );
                             } else {
                               // Fallback: show details bottom sheet
                               _showTipDetails(context, tip.title, tip.description);

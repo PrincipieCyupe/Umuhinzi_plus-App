@@ -20,35 +20,55 @@ class TipCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image at top, full width
-            Expanded(
-              flex: 3,
+            // Image at top, full width, fixed height 120px
+            SizedBox(
+              height: 120,
+              width: double.infinity,
               child: Stack(
-                alignment: Alignment.center,
+                fit: StackFit.expand,
                 children: [
                   CachedNetworkImage(
                     imageUrl: tip.imageUrl,
-                    width: double.infinity,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(color: Colors.grey.shade200),
+                    placeholder: (context, url) => Container(color: Colors.grey.shade300),
                     errorWidget: (context, url, error) => const Icon(Icons.error),
                   ),
-                  // If it's a video, show a play button over the image
-                  if (tip.category == 'Video' && tip.videoUrl != null)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        shape: BoxShape.circle,
+                  // Article/Post: small category badge on the top left
+                  if (tip.category == 'Article' || tip.category == 'Post')
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          tip.category,
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
                       ),
-                      padding: const EdgeInsets.all(8),
-                      child: const Icon(Icons.play_arrow, color: Colors.white, size: 30),
+                    ),
+                  // Video: green play button icon overlay on bottom right
+                  if (tip.category == 'Video')
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(6),
+                        child: const Icon(Icons.play_arrow, color: Colors.white, size: 20),
+                      ),
                     ),
                 ],
               ),
             ),
             // Title and description below image
             Expanded(
-              flex: 2,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
@@ -57,7 +77,7 @@ class TipCard extends StatelessWidget {
                     Text(
                       tip.title,
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
