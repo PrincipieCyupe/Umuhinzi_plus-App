@@ -1,4 +1,4 @@
-import '../../../../core/constants/rwanda_data.dart'; // Make sure path is correct
+import '../../../../core/constants/rwanda_data.dart';
 import '../../domain/entities/weather_entity.dart';
 import '../services/weather_service.dart';
 import '../models/weather_model.dart';
@@ -9,7 +9,6 @@ class WeatherRepository {
   WeatherRepository({required WeatherService weatherService})
       : _weatherService = weatherService;
 
-  // 1. ADD THIS BACK - This fixes the red line in your Bloc
   Future<WeatherEntity> getWeatherByDistrict(String districtName) async {
     final coordinates = RwandaDistricts.getCoordinates(districtName);
 
