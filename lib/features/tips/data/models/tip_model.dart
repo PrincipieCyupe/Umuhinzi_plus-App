@@ -6,10 +6,10 @@ class TipModel extends TipEntity {
     required super.id,
     required super.title,
     required super.description,
+    required super.body,
     required super.imageUrl,
     required super.category,
-    super.videoUrl,
-    super.articleUrl,
+    super.videoId,
     required super.date,
   });
 
@@ -19,10 +19,10 @@ class TipModel extends TipEntity {
       id: json['id'] as String,
       title: json['title'] as String,
       description: json['description'] as String,
+      body: json['body'] as String? ?? '', // default empty string if missing
       imageUrl: json['imageUrl'] as String,
       category: json['category'] as String,
-      videoUrl: json['videoUrl'] as String?,
-      articleUrl: json['articleUrl'] as String?,
+      videoId: json['videoId'] as String?,
       date: DateTime.parse(json['date'] as String),
     );
   }
@@ -33,10 +33,10 @@ class TipModel extends TipEntity {
       'id': id,
       'title': title,
       'description': description,
+      'body': body,
       'imageUrl': imageUrl,
       'category': category,
-      'videoUrl': videoUrl,
-      'articleUrl': articleUrl,
+      'videoId': videoId,
       'date': date.toIso8601String(),
     };
   }
