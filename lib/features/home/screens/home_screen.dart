@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
+import '../presentation/bloc/home/home_cubit.dart';
+import '../presentation/bloc/home/home_state.dart';
+import '../presentation/bloc/navigation_cubit.dart';
 
 import '../../../core/constants/rwanda_data.dart';
 import '../../../core/utils/page_transitions.dart';
@@ -99,6 +101,8 @@ class Home extends StatelessWidget {
 
         return MultiBlocProvider(
           providers: [
+            BlocProvider(create: (_) => NavigationCubit()),
+            BlocProvider(create: (_) => HomeCubit()..loadUserData()),
             BlocProvider(
               create: (context) => WeatherBloc(
                 weatherRepository: WeatherRepository(
@@ -144,54 +148,15 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
-  int _selectedIndex = 0;
-
-  void _onTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  String _selectedDistrict = 'Gasabo';
-
-  String? _userName;
-  String? _userEmail;
-  String? _userCrop;
-  String? _userSeason;
-  String? _userProvince;
-  String? _userDistrict;
-
-  final List<String> items = ["Home", "Weather", "Market", "Tips & Updates"];
-
   @override
   void initState() {
     super.initState();
-    _loadUserData();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchWeatherForDistrict(_getSelectedDistrict());
+      final homeState = context.read<HomeCubit>().state;
+      final district =
+          widget.selectedDistrict ?? homeState.userDistrict ?? 'Gasabo';
+      _fetchWeatherForDistrict(district);
     });
-  }
-
-  Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final firebaseUser = FirebaseAuth.instance.currentUser;
-
-    setState(() {
-      _userName = prefs.getString('user_name');
-      _userEmail = firebaseUser?.email ?? prefs.getString('user_email');
-      _userCrop = prefs.getString('selected_crop');
-      _userSeason = prefs.getString('selected_season');
-      _userProvince = prefs.getString('selected_province');
-      _userDistrict = prefs.getString('selected_district');
-
-      if (_userDistrict != null && _userDistrict!.isNotEmpty) {
-        _selectedDistrict = _userDistrict!;
-      }
-    });
-  }
-
-  String _getSelectedDistrict() {
-    return widget.selectedDistrict ?? _selectedDistrict;
   }
 
   void _fetchWeatherForDistrict(String district) {
@@ -210,320 +175,356 @@ class _HomeContentState extends State<HomeContent> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      HomeTab(onCategoryTap: _onTapped),
+      const HomeTab(),
       const WeatherPage(),
       const MarketPage(),
       const TipsPage(),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black87),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        title: RichText(
-          text: TextSpan(
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              fontStyle: FontStyle.italic,
-              letterSpacing: 1.2,
-            ),
-            children: [
-              TextSpan(
-                text: "UMUHIN",
-                style: TextStyle(color: Colors.green.shade700),
+    return BlocBuilder<NavigationCubit, int>(
+      builder: (context, selectedIndex) {
+        return BlocBuilder<HomeCubit, HomeState>(
+          builder: (context, homeState) {
+            return Scaffold(
+              appBar: AppBar(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                leading: Builder(
+                  builder: (ctx) => IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.black87),
+                    onPressed: () => Scaffold.of(ctx).openDrawer(),
+                  ),
+                ),
+                title: RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      fontStyle: FontStyle.italic,
+                      letterSpacing: 1.2,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "UMUHIN",
+                        style: TextStyle(color: Colors.green.shade700),
+                      ),
+                      TextSpan(
+                        text: "ZI+",
+                        style: TextStyle(color: Colors.yellow.shade700),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Image.asset(
+                      'lib/images/logo.png',
+                      width: 20,
+                      height: 20,
+                    ),
+                  ),
+                ],
               ),
-              TextSpan(
-                text: "ZI+",
-                style: TextStyle(color: Colors.yellow.shade700),
+              drawer: AppDrawer(
+                userEmail: homeState.userEmail,
+                userName: homeState.userName,
+                selectedCrop: homeState.userCrop,
+                selectedSeason: homeState.userSeason,
+                selectedDistrict: homeState.userDistrict,
+                selectedProvince: homeState.userProvince,
+                onLogout: () async {
+                  final authService = AuthService();
+                  await authService.signOut();
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      FadeRoute(page: const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
+                },
+                onUpdateProfile: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    SlideUpRoute(page: const InputDetails()),
+                  );
+                },
+                onWeatherTap: () =>
+                    context.read<NavigationCubit>().navigateTo(1),
               ),
-            ],
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Image.asset('lib/images/logo.png', width: 20, height: 20),
-          ),
-        ],
-      ),
-      drawer: AppDrawer(
-        userEmail: _userEmail,
-        userName: _userName,
-        selectedCrop: _userCrop,
-        selectedSeason: _userSeason,
-        selectedDistrict: _userDistrict,
-        selectedProvince: _userProvince,
-        onLogout: () async {
-          final authService = AuthService();
-          await authService.signOut();
-          if (context.mounted) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              FadeRoute(page: const LoginScreen()),
-              (route) => false,
+              body: SafeArea(child: screens.elementAt(selectedIndex)),
+              bottomNavigationBar: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.white,
+                currentIndex: selectedIndex,
+                onTap: (i) => context.read<NavigationCubit>().navigateTo(i),
+                unselectedItemColor: Colors.green.shade700,
+                selectedItemColor: Colors.orangeAccent,
+                selectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 12,
+                ),
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.home_outlined),
+                    activeIcon: Icon(Icons.home),
+                    label: "Home",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.wb_sunny_outlined),
+                    activeIcon: Icon(Icons.wb_sunny),
+                    label: "Weather",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.bar_chart),
+                    label: "Market",
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.lightbulb_outline),
+                    activeIcon: Icon(Icons.lightbulb),
+                    label: "Tips",
+                  ),
+                ],
+              ),
             );
-          }
-        },
-        onUpdateProfile: () {
-          Navigator.pop(context);
-          Navigator.push(context, SlideUpRoute(page: const InputDetails()));
-        },
-        onWeatherTap: () {
-          _onTapped(1); // Navigate to Weather tab
-        },
-      ),
-      body: SafeArea(child: screens.elementAt(_selectedIndex)),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        currentIndex: _selectedIndex,
-        onTap: _onTapped,
-        unselectedItemColor: Colors.green.shade700,
-        selectedItemColor: Colors.orangeAccent,
-        selectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.normal,
-          fontSize: 12,
-        ),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.wb_sunny_outlined),
-            activeIcon: Icon(Icons.wb_sunny),
-            label: "Weather",
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Market"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.lightbulb_outline),
-            activeIcon: Icon(Icons.lightbulb),
-            label: "Tips",
-          ),
-        ],
-      ),
+          },
+        );
+      },
     );
   }
 }
 
-class HomeTab extends StatefulWidget {
-  final Function(int) onCategoryTap;
-
-  const HomeTab({super.key, required this.onCategoryTap});
-
-  @override
-  State<HomeTab> createState() => _HomeTabState();
-}
-
-class _HomeTabState extends State<HomeTab> {
-  String _selectedCategory = 'All';
+class HomeTab extends StatelessWidget {
+  const HomeTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF6F4EB),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const TextField(
-                decoration: InputDecoration(
-                  hintText: "Search farming tips, markets, or updates",
-                  hintStyle: TextStyle(color: Colors.black54),
-                  prefixIcon: Icon(Icons.search, color: Colors.black54),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 14),
+    return BlocBuilder<HomeCubit, HomeState>(
+      builder: (context, state) {
+        final selectedCategory = state.selectedCategory;
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF6F4EB),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const TextField(
+                    decoration: InputDecoration(
+                      hintText: "Search farming tips, markets, or updates",
+                      hintStyle: TextStyle(color: Colors.black54),
+                      prefixIcon: Icon(Icons.search, color: Colors.black54),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  _buildCategoryPill(
-                    "All",
-                    isSelected: _selectedCategory == 'All',
-                    onTap: () => setState(() => _selectedCategory = 'All'),
-                  ),
-                  _buildCategoryPill(
-                    "Crops",
-                    isSelected: _selectedCategory == 'Crops',
-                    onTap: () => setState(() => _selectedCategory = 'Crops'),
-                  ),
-                  _buildCategoryPill(
-                    "Tips",
-                    isSelected: _selectedCategory == 'Tips',
-                    onTap: () => setState(() => _selectedCategory = 'Tips'),
-                  ),
-                  _buildCategoryPill(
-                    "Updates",
-                    isSelected: _selectedCategory == 'Updates',
-                    onTap: () => setState(() => _selectedCategory = 'Updates'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 170,
-              child: PageView(
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  _buildBannerCard(
-                    title: "How to use app",
-                    subtitle: "learn about all the features\nof app",
-                    buttonWidget: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: [
+                      _buildCategoryPill(
+                        "All",
+                        isSelected: selectedCategory == 'All',
+                        onTap: () =>
+                            context.read<HomeCubit>().selectCategory('All'),
                       ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.play_arrow,
-                          color: Color(0xFF3FAE4A),
-                          size: 30,
+                      _buildCategoryPill(
+                        "Crops",
+                        isSelected: selectedCategory == 'Crops',
+                        onTap: () =>
+                            context.read<HomeCubit>().selectCategory('Crops'),
+                      ),
+                      _buildCategoryPill(
+                        "Tips",
+                        isSelected: selectedCategory == 'Tips',
+                        onTap: () =>
+                            context.read<HomeCubit>().selectCategory('Tips'),
+                      ),
+                      _buildCategoryPill(
+                        "Updates",
+                        isSelected: selectedCategory == 'Updates',
+                        onTap: () =>
+                            context.read<HomeCubit>().selectCategory('Updates'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 170,
+                  child: PageView(
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      _buildBannerCard(
+                        title: "How to use app",
+                        subtitle: "learn about all the features\nof app",
+                        buttonWidget: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.play_arrow,
+                              color: Color(0xFF3FAE4A),
+                              size: 30,
+                            ),
+                            onPressed: () =>
+                                _launchURL("https://www.youtube.com"),
+                          ),
                         ),
-                        onPressed: () => _launchURL("https://www.youtube.com"),
+                        imagePath: 'lib/images/Image1.png',
+                        bgColor: const Color(0xFFDDEEDC),
+                      ),
+                      _buildBannerCard(
+                        title: "Fast help desk",
+                        subtitle: "Talk to one of our team\nmembers",
+                        buttonWidget: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3FAE4A),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () => _launchURL("tel:0798200584"),
+                          child: const Text(
+                            "Get Call",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        imagePath: 'lib/images/Image2.png',
+                        bgColor: const Color(0xFFDDEEDC),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3FAE4A),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    imagePath: 'lib/images/Image1.png',
-                    bgColor: const Color(0xFFDDEEDC),
-                  ),
-                  _buildBannerCard(
-                    title: "Fast help desk",
-                    subtitle: "Talk to one of our team\nmembers",
-                    buttonWidget: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3FAE4A),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                    const SizedBox(width: 4),
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.grey,
+                        shape: BoxShape.circle,
                       ),
-                      onPressed: () => _launchURL("tel:0798200584"),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  "Today's Weather",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                _buildDynamicWeatherCard(context),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Market Views",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "Overview of market trends",
+                          style: TextStyle(
+                            color: Color(0xFF3FAE4A),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    TextButton(
+                      onPressed: () =>
+                          context.read<NavigationCubit>().navigateTo(2),
                       child: const Text(
-                        "Get Call",
+                        "See All",
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF3FAE4A),
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    imagePath: 'lib/images/Image2.png',
-                    bgColor: const Color(0xFFDDEEDC),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 20,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3FAE4A),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.grey,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              "Today's Weather",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            _buildDynamicWeatherCard(context),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Market Views",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      "Overview of market trends",
-                      style: TextStyle(color: Color(0xFF3FAE4A), fontSize: 14),
-                    ),
                   ],
                 ),
-                TextButton(
-                  onPressed: () {
-                    context
-                        .findAncestorStateOfType<_HomeContentState>()
-                        ?._onTapped(2);
-                  },
-                  child: const Text(
-                    "See All",
-                    style: TextStyle(
-                      color: Color(0xFF3FAE4A),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const SizedBox(height: 12),
+                _buildMarketItem(
+                  "Wheat",
+                  "Kigali, Nyabugogo",
+                  "2700 RWF",
+                  true,
+                ),
+                _buildMarketItem(
+                  "Cotton",
+                  "Kigali, Nyabugogo",
+                  "8700 RWF",
+                  false,
+                ),
+                _buildMarketItem(
+                  "Orange",
+                  "Bugesera, Nyamata",
+                  "7400 RWF",
+                  false,
+                ),
+                _buildMarketItem("Ginger", "Musanze, Market", "1500 RWF", true),
+                const SizedBox(height: 24),
+                Text(
+                  selectedCategory,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
+                const SizedBox(height: 12),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.72,
+                  children: _buildFilteredGridItems(context, selectedCategory),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            _buildMarketItem("Wheat", "Kigali, Nyabugogo", "2700 RWF", true),
-            _buildMarketItem("Cotton", "Kigali, Nyabugogo", "8700 RWF", false),
-            _buildMarketItem("Orange", "Bugesera, Nyamata", "7400 RWF", false),
-            _buildMarketItem("Ginger", "Musanze, Market", "1500 RWF", true),
-            const SizedBox(height: 24),
-            Text(
-              _selectedCategory == 'All' ? 'All' : _selectedCategory,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.72,
-              children: _buildFilteredGridItems(),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -695,7 +696,10 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  List<Widget> _buildFilteredGridItems() {
+  List<Widget> _buildFilteredGridItems(
+    BuildContext context,
+    String selectedCategory,
+  ) {
     final allItems = [
       {
         'title': "Today's Weather",
@@ -727,22 +731,11 @@ class _HomeTabState extends State<HomeTab> {
       },
     ];
 
-    if (_selectedCategory == 'All') {
-      return allItems
-          .map(
-            (item) => _buildGridItem(
-              context,
-              item['title'] as String,
-              item['subtitle'] as String,
-              item['image'] as String,
-              item['index'] as int,
-            ),
-          )
-          .toList();
-    }
+    final filtered = selectedCategory == 'All'
+        ? allItems
+        : allItems.where((i) => i['category'] == selectedCategory).toList();
 
-    return allItems
-        .where((item) => item['category'] == _selectedCategory)
+    return filtered
         .map(
           (item) => _buildGridItem(
             context,
@@ -763,11 +756,7 @@ class _HomeTabState extends State<HomeTab> {
     int targetIndex,
   ) {
     return GestureDetector(
-      onTap: () {
-        context.findAncestorStateOfType<_HomeContentState>()?._onTapped(
-          targetIndex,
-        );
-      },
+      onTap: () => context.read<NavigationCubit>().navigateTo(targetIndex),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

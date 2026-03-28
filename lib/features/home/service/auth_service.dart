@@ -16,9 +16,9 @@ class AuthService {
     try {
       final UserCredential credential = await _auth
           .createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+            email: email.trim(),
+            password: password,
+          );
       return credential.user;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
@@ -102,6 +102,21 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
+  }
+
+  /// Sends a verification email to the currently signed-in user.
+  Future<void> sendEmailVerification() async {
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  /// Reloads the user from Firebase and returns whether their email is verified.
+  Future<bool> reloadAndCheckVerified() async {
+    await _auth.currentUser?.reload();
+    return _auth.currentUser?.emailVerified ?? false;
   }
 
   Future<void> deleteAccount() async {

@@ -1,20 +1,33 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../presentation/bloc/auth/auth_cubit.dart';
+import '../presentation/bloc/auth/auth_state.dart';
 import '../service/auth_service.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends StatelessWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AuthCubit(AuthService()),
+      child: const _ForgotPasswordView(),
+    );
+  }
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordView extends StatefulWidget {
+  const _ForgotPasswordView();
+
+  @override
+  State<_ForgotPasswordView> createState() => _ForgotPasswordViewState();
+}
+
+class _ForgotPasswordViewState extends State<_ForgotPasswordView> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
-  final AuthService _authService = AuthService();
-  bool _isLoading = false;
-  bool _emailSent = false;
 
   @override
   void dispose() {
@@ -27,92 +40,93 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return emailRegex.hasMatch(email.trim());
   }
 
-  Future<void> _handleSendReset() async {
+  void _onSendReset() {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _authService.sendPasswordResetEmail(email: _emailCtrl.text.trim());
-      if (!mounted) return;
-      setState(() => _emailSent = true);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    context.read<AuthCubit>().sendPasswordReset(_emailCtrl.text.trim());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Background image
-          Positioned.fill(
-            child: Image.asset('lib/images/Umuhinzi.png', fit: BoxFit.cover),
-          ),
+    return BlocConsumer<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is PasswordResetLoading;
+        final emailSent = state is PasswordResetSent;
 
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(18),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'lib/images/logo.png',
-                        width: 110,
-                        height: 110,
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        "UMUHINZI+",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 28,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
+        return Scaffold(
+          body: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  'lib/images/Umuhinzi.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+              SafeArea(
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(18),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: Column(
+                        children: [
+                          Image.asset(
+                            'lib/images/logo.png',
+                            width: 110,
+                            height: 110,
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            "UMUHINZI+",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 28,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
 
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(22),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                          child: Container(
-                            padding: const EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.35),
-                                width: 1.2,
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(22),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                              child: Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(22),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.35),
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: emailSent
+                                    ? _buildSuccessView(context)
+                                    : _buildFormView(isLoading),
                               ),
                             ),
-                            child: _emailSent
-                                ? _buildSuccessView()
-                                : _buildFormView(),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildFormView() {
+  Widget _buildFormView(bool isLoading) {
     return Form(
       key: _formKey,
       child: Column(
@@ -139,7 +153,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 18),
 
-          // Email field
           TextFormField(
             controller: _emailCtrl,
             keyboardType: TextInputType.emailAddress,
@@ -179,7 +192,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 18),
 
-          // Send button
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -190,8 +202,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: _isLoading ? null : _handleSendReset,
-              child: _isLoading
+              onPressed: isLoading ? null : _onSendReset,
+              child: isLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -211,7 +223,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Back to login
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
@@ -227,7 +238,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  Widget _buildSuccessView() {
+  Widget _buildSuccessView(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
