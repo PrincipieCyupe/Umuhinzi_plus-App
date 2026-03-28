@@ -2,6 +2,7 @@ import '../../../../core/constants/rwanda_data.dart';
 import '../../domain/entities/weather_entity.dart';
 import '../services/weather_service.dart';
 
+/// Weather Repository - Data Layer
 /// Abstracts the weather service and provides clean interface
 class WeatherRepository {
   final WeatherService _weatherService;

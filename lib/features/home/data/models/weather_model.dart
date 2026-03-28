@@ -1,5 +1,6 @@
 import '../../domain/entities/weather_entity.dart';
 
+/// Weather Model - Data Layer
 /// Handles JSON parsing from RapidAPI OpenWeather 5-day Forecast API
 class WeatherModel extends WeatherEntity {
   const WeatherModel({

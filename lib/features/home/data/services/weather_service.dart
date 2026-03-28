@@ -33,21 +33,21 @@ class WeatherService {
 
       final response = await http
           .get(
-        uri,
-        headers: {
-          'x-rapidapi-key': _apiKey,
-          'x-rapidapi-host': _apiHost,
-          'Content-Type': 'application/json',
-        },
-      )
+            uri,
+            headers: {
+              'x-rapidapi-key': _apiKey,
+              'x-rapidapi-host': _apiHost,
+              'Content-Type': 'application/json',
+            },
+          )
           .timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          throw Exception(
-            'Connection timeout. Please check your internet.',
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception(
+                'Connection timeout. Please check your internet.',
+              );
+            },
           );
-        },
-      );
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;

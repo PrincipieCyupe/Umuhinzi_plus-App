@@ -44,30 +44,43 @@ class AuthService {
     try {
       if (kIsWeb) {
         final GoogleAuthProvider googleProvider = GoogleAuthProvider();
-        final UserCredential userCredential =
-        await _auth.signInWithPopup(googleProvider);
+        final UserCredential userCredential = await _auth.signInWithPopup(
+          googleProvider,
+        );
         return userCredential.user;
       }
 
       await GoogleSignIn.instance.initialize();
 
-      final GoogleSignInAccount googleUser =
-      await GoogleSignIn.instance.authenticate();
+      await GoogleSignIn.instance.signOut();
+
+      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+          .authenticate();
 
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
+      // Get authorization for scopes to obtain access token
+      final authorization = await googleUser.authorizationClient
+          .authorizeScopes(['email', 'profile']);
+
       final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
+        accessToken: authorization.accessToken,
       );
 
-      final UserCredential userCredential =
-      await _auth.signInWithCredential(credential);
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
 
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    } on GoogleSignInException catch (e) {
+      throw Exception(
+        'GoogleSignInException(code: ${e.code.name}, description: ${e.description})',
+      );
     } catch (e) {
-      throw Exception("Google Sign-In failed: ${e.toString()}");
+      throw Exception('Google Sign-In failed: ${e.toString()}');
     }
   }
 
