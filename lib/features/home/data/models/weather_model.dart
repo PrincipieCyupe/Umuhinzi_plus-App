@@ -1,5 +1,6 @@
 import '../../domain/entities/weather_entity.dart';
 
+/// Handles JSON parsing from RapidAPI OpenWeather 5-day Forecast API
 class WeatherModel extends WeatherEntity {
   const WeatherModel({
     required super.latitude,
@@ -23,64 +24,129 @@ class WeatherModel extends WeatherEntity {
     required super.sunrise,
     required super.sunset,
     required super.dateTime,
-    super.hourlyForecast = const [], 
-    super.dailyForecast = const [],
   });
 
+  /// Factory constructor to create WeatherModel from RapidAPI 5-day forecast JSON
+  /// The API returns 'list' array with forecast data, we take the first item (current)
   factory WeatherModel.fromJson(
     Map<String, dynamic> json,
     String districtName,
   ) {
-    // Determine if this is the full response or a nested forecast item
+    // Handle 5-day forecast API response format
     final list = json['list'] as List?;
-    final Map<String, dynamic> data = (list != null && list.isNotEmpty) 
-        ? list[0] as Map<String, dynamic> 
-        : json;
 
-    final main = data['main'] as Map<String, dynamic>? ?? {};
-    final wind = data['wind'] as Map<String, dynamic>? ?? {};
-    final clouds = data['clouds'] as Map<String, dynamic>? ?? {};
-    final weather = (data['weather'] as List?)?.first as Map<String, dynamic>? ?? {};
+    // Use first forecast item as current weather
+    Map<String, dynamic> forecast;
+    if (list != null && list.isNotEmpty) {
+      forecast = list[0] as Map<String, dynamic>;
+    } else {
+      // Fallback to direct response (current weather endpoint)
+      forecast = json;
+    }
 
-    // For coordinates and sys, look in the 'city' object if available
+    final main = forecast['main'] as Map<String, dynamic>? ?? {};
+    final wind = forecast['wind'] as Map<String, dynamic>? ?? {};
+    final clouds = forecast['clouds'] as Map<String, dynamic>? ?? {};
+    final weather =
+        (forecast['weather'] as List?)?.first as Map<String, dynamic>? ?? {};
+
+    // Get city info from the 'city' field (5-day API)
     final city = json['city'] as Map<String, dynamic>?;
-    final sys = data['sys'] as Map<String, dynamic>? ?? city ?? {};
+    final sys = city?['country'] != null
+        ? {
+            'country': city!['country'],
+            'sunrise': city['sunrise'],
+            'sunset': city['sunset'],
+          }
+        : forecast['sys'] as Map<String, dynamic>? ?? {};
 
-    Map<String, dynamic>? coord = city?['coord'] ?? json['coord'];
+    // Get coordinates from 'city' or 'coord' field
+    Map<String, dynamic>? coord;
+    if (city?['coord'] != null) {
+      coord = city!['coord'] as Map<String, dynamic>;
+    } else {
+      coord = json['coord'] as Map<String, dynamic>?;
+    }
+
+    // Temperature is in Kelvin by default! Convert to Celsius
+    // Kelvin to Celsius: C = K - 273.15
+    double tempKelvin = (main['temp'] as num?)?.toDouble() ?? 0.0;
+    double feelsLikeKelvin = (main['feels_like'] as num?)?.toDouble() ?? 0.0;
+    double tempMinKelvin = (main['temp_min'] as num?)?.toDouble() ?? 0.0;
+    double tempMaxKelvin = (main['temp_max'] as num?)?.toDouble() ?? 0.0;
 
     return WeatherModel(
-      latitude: (coord?['lat'] as num?)?.toDouble() ?? 0.0,
-      longitude: (coord?['lon'] as num?)?.toDouble() ?? 0.0,
+      latitude: coord?['lat'] != null ? (coord!['lat'] as num).toDouble() : 0.0,
+      longitude: coord?['lon'] != null
+          ? (coord!['lon'] as num).toDouble()
+          : 0.0,
       districtName: districtName,
-      country: city?['country'] as String? ?? 'RW',
+      country: 'RW', // Always Rwanda - the coordinates are in Rwanda
       weatherMain: weather['main'] as String? ?? 'Unknown',
       weatherDescription: weather['description'] as String? ?? 'No description',
       weatherIcon: weather['icon'] as String? ?? '01d',
-      temperature: _kelvinToCelsius((main['temp'] as num?)?.toDouble() ?? 0.0),
-      feelsLike: _kelvinToCelsius((main['feels_like'] as num?)?.toDouble() ?? 0.0),
-      tempMin: _kelvinToCelsius((main['temp_min'] as num?)?.toDouble() ?? 0.0),
-      tempMax: _kelvinToCelsius((main['temp_max'] as num?)?.toDouble() ?? 0.0),
+      temperature: _kelvinToCelsius(tempKelvin),
+      feelsLike: _kelvinToCelsius(feelsLikeKelvin),
+      tempMin: _kelvinToCelsius(tempMinKelvin),
+      tempMax: _kelvinToCelsius(tempMaxKelvin),
       pressure: main['pressure'] as int? ?? 0,
       humidity: main['humidity'] as int? ?? 0,
       windSpeed: (wind['speed'] as num?)?.toDouble() ?? 0.0,
       windGust: (wind['gust'] as num?)?.toDouble() ?? 0.0,
       windDeg: wind['deg'] as int? ?? 0,
-      visibility: data['visibility'] as int? ?? 10000,
+      visibility: forecast['visibility'] as int? ?? 10000,
       clouds: clouds['all'] as int? ?? 0,
       sunrise: _parseDateTime(sys['sunrise']),
       sunset: _parseDateTime(sys['sunset']),
-      dateTime: _parseDateTime(data['dt'] ?? data['dt_txt']),
-      hourlyForecast: [],
-      dailyForecast: [],
+      dateTime: _parseDateTime(forecast['dt']),
     );
   }
 
-  static double _kelvinToCelsius(double kelvin) => kelvin - 273.15;
+  /// Convert Kelvin to Celsius
+  static double _kelvinToCelsius(double kelvin) {
+    return kelvin - 273.15;
+  }
 
+  /// Helper to parse datetime from unix timestamp or ISO string
   static DateTime _parseDateTime(dynamic value) {
     if (value == null) return DateTime.now();
-    if (value is int) return DateTime.fromMillisecondsSinceEpoch(value * 1000);
-    if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+    if (value is int) {
+      return DateTime.fromMillisecondsSinceEpoch(value * 1000, isUtc: true);
+    }
+    if (value is String) {
+      return DateTime.tryParse(value) ?? DateTime.now();
+    }
     return DateTime.now();
+  }
+
+  /// Convert to JSON (for caching)
+  Map<String, dynamic> toJson() {
+    return {
+      'coord': {'lat': latitude, 'lon': longitude},
+      'weather': [
+        {
+          'main': weatherMain,
+          'description': weatherDescription,
+          'icon': weatherIcon,
+        },
+      ],
+      'main': {
+        'temp': temperature,
+        'feels_like': feelsLike,
+        'temp_min': tempMin,
+        'temp_max': tempMax,
+        'pressure': pressure,
+        'humidity': humidity,
+      },
+      'wind': {'speed': windSpeed, 'deg': windDeg, 'gust': windGust},
+      'clouds': {'all': clouds},
+      'visibility': visibility,
+      'sys': {
+        'country': country,
+        'sunrise': sunrise.millisecondsSinceEpoch ~/ 1000,
+        'sunset': sunset.millisecondsSinceEpoch ~/ 1000,
+      },
+      'dt': dateTime.millisecondsSinceEpoch ~/ 1000,
+    };
   }
 }
