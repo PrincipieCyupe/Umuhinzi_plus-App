@@ -1,16 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../../../core/config/api_config.dart';
 import '../models/weather_model.dart';
 
 /// Weather Service - Data Layer
 /// Handles API calls to RapidAPI OpenWeather
 class WeatherService {
-  // RapidAPI credentials
-  static const String _baseUrl =
-      'https://open-weather13.p.rapidapi.com/fivedaysforcast';
-  static const String _apiKey =
-      'ea028c6133msh9af7cf768a80606p1edd64jsnb9fdfa8ec4fe';
-  static const String _apiHost = 'open-weather13.p.rapidapi.com';
+  // RapidAPI credentials from ApiConfig
+  static const String _baseUrl = ApiConfig.weatherBaseUrl;
+  static const String _apiKey = ApiConfig.weatherApiKey;
+  static const String _apiHost = ApiConfig.weatherApiHost;
 
   // Empty constructor
   WeatherService();
