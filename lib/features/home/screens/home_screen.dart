@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 
@@ -30,6 +31,15 @@ import '../../../features/market/domain/usecases/update_produce.dart';
 import '../../../features/market/presentation/bloc/market_bloc.dart';
 import '../../../features/market/presentation/pages/market_page.dart';
 
+// Tips imports
+import '../../../features/tips/data/datasources/tips_local_data_source.dart';
+import '../../../features/tips/data/repositories/tips_repository_impl.dart';
+import '../../../features/tips/domain/usecases/get_tips.dart';
+import '../../../features/tips/presentation/bloc/tips_bloc.dart';
+import '../../../features/tips/presentation/bloc/tips_event.dart';
+import '../../../features/tips/presentation/pages/tips_page.dart';
+import '../../../features/weather/weather_page.dart';
+
 void main() {
   runApp(const Home());
 }
@@ -53,9 +63,7 @@ class Home extends StatelessWidget {
             ),
             home: const Scaffold(
               body: Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF3FAE4A),
-                ),
+                child: CircularProgressIndicator(color: Color(0xFF3FAE4A)),
               ),
             ),
           );
@@ -63,10 +71,12 @@ class Home extends StatelessWidget {
 
         final sharedPreferences = snapshot.data!;
         final firestore = FirebaseFirestore.instance;
-        final remoteDataSource =
-        MarketRemoteDataSourceImpl(firestore: firestore);
-        final repository =
-        MarketRepositoryImpl(remoteDataSource: remoteDataSource);
+        final remoteDataSource = MarketRemoteDataSourceImpl(
+          firestore: firestore,
+        );
+        final repository = MarketRepositoryImpl(
+          remoteDataSource: remoteDataSource,
+        );
         final preferencesService = PreferencesService(
           sharedPreferences: sharedPreferences,
         );
@@ -76,6 +86,16 @@ class Home extends StatelessWidget {
         final addProduce = AddProduce(repository);
         final updateProduce = UpdateProduce(repository);
         final deleteProduce = DeleteProduce(repository);
+
+        final tipsDataSource = TipsLocalDataSourceImpl();
+        final tipsRemoteDataSource = TipsRemoteDataSourceImpl(
+          client: http.Client(),
+        );
+        final tipsRepository = TipsRepositoryImpl(
+          localDataSource: tipsDataSource,
+          remoteDataSource: tipsRemoteDataSource,
+        );
+        final getTips = GetTips(tipsRepository);
 
         return MultiBlocProvider(
           providers: [
@@ -95,6 +115,9 @@ class Home extends StatelessWidget {
                 deleteProduce: deleteProduce,
                 preferencesService: preferencesService,
               ),
+            ),
+            BlocProvider(
+              create: (context) => TipsBloc(getTips: getTips)..add(LoadTips()),
             ),
           ],
           child: MaterialApp(
@@ -188,19 +211,9 @@ class _HomeContentState extends State<HomeContent> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       HomeTab(onCategoryTap: _onTapped),
-      const Center(
-        child: Text(
-          "Weather Page",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-      ),
+      const WeatherPage(),
       const MarketPage(),
-      const Center(
-        child: Text(
-          "Tips & Updates Page",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-      ),
+      const TipsPage(),
     ];
 
     return Scaffold(
@@ -254,13 +267,16 @@ class _HomeContentState extends State<HomeContent> {
             Navigator.pushAndRemoveUntil(
               context,
               FadeRoute(page: const LoginScreen()),
-                  (route) => false,
+              (route) => false,
             );
           }
         },
         onUpdateProfile: () {
           Navigator.pop(context);
           Navigator.push(context, SlideUpRoute(page: const InputDetails()));
+        },
+        onWeatherTap: () {
+          _onTapped(1); // Navigate to Weather tab
         },
       ),
       body: SafeArea(child: screens.elementAt(_selectedIndex)),
@@ -290,10 +306,7 @@ class _HomeContentState extends State<HomeContent> {
             activeIcon: Icon(Icons.wb_sunny),
             label: "Weather",
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: "Market",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: "Market"),
           BottomNavigationBarItem(
             icon: Icon(Icons.lightbulb_outline),
             activeIcon: Icon(Icons.lightbulb),
@@ -467,15 +480,16 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                     Text(
                       "Overview of market trends",
-                      style: TextStyle(
-                        color: Color(0xFF3FAE4A),
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Color(0xFF3FAE4A), fontSize: 14),
                     ),
                   ],
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    context
+                        .findAncestorStateOfType<_HomeContentState>()
+                        ?._onTapped(2);
+                  },
                   child: const Text(
                     "See All",
                     style: TextStyle(
@@ -494,7 +508,7 @@ class _HomeTabState extends State<HomeTab> {
             _buildMarketItem("Ginger", "Musanze, Market", "1500 RWF", true),
             const SizedBox(height: 24),
             Text(
-              _selectedCategory == 'Crops' ? 'Crops' : 'All',
+              _selectedCategory == 'All' ? 'All' : _selectedCategory,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -505,36 +519,7 @@ class _HomeTabState extends State<HomeTab> {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
               childAspectRatio: 0.72,
-              children: [
-                _buildGridItem(
-                  context,
-                  "Today's Weather",
-                  "View detailed forecast",
-                  'lib/images/home_weather.png',
-                  1,
-                ),
-                _buildGridItem(
-                  context,
-                  "My Crops",
-                  "Track crop growth",
-                  'lib/images/home_crop.png',
-                  3,
-                ),
-                _buildGridItem(
-                  context,
-                  "Livestock Health",
-                  "Monitor livestock health",
-                  'lib/images/home_ls.png',
-                  3,
-                ),
-                _buildGridItem(
-                  context,
-                  "Equipment Maintenance",
-                  "Schedule equipment checks",
-                  'lib/images/home_eq.png',
-                  3,
-                ),
-              ],
+              children: _buildFilteredGridItems(),
             ),
           ],
         ),
@@ -550,10 +535,10 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildCategoryPill(
-      String text, {
-        bool isSelected = false,
-        VoidCallback? onTap,
-      }) {
+    String text, {
+    bool isSelected = false,
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -627,7 +612,7 @@ class _HomeTabState extends State<HomeTab> {
               fit: BoxFit.cover,
               alignment: Alignment.centerRight,
               errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.image, size: 50, color: Colors.grey),
+                  const Icon(Icons.image, size: 50, color: Colors.grey),
             ),
           ),
         ],
@@ -636,11 +621,11 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildMarketItem(
-      String name,
-      String location,
-      String price,
-      bool isUp,
-      ) {
+    String name,
+    String location,
+    String price,
+    bool isUp,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -710,13 +695,73 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  List<Widget> _buildFilteredGridItems() {
+    final allItems = [
+      {
+        'title': "Today's Weather",
+        'subtitle': "View detailed forecast",
+        'image': 'lib/images/home_weather.png',
+        'index': 1,
+        'category': 'Tips',
+      },
+      {
+        'title': "My Crops",
+        'subtitle': "Track crop growth",
+        'image': 'lib/images/home_crop.png',
+        'index': 3,
+        'category': 'Crops',
+      },
+      {
+        'title': "Livestock Health",
+        'subtitle': "Monitor livestock health",
+        'image': 'lib/images/home_ls.png',
+        'index': 3,
+        'category': 'Tips',
+      },
+      {
+        'title': "Equipment Maintenance",
+        'subtitle': "Schedule equipment checks",
+        'image': 'lib/images/home_eq.png',
+        'index': 3,
+        'category': 'Tips',
+      },
+    ];
+
+    if (_selectedCategory == 'All') {
+      return allItems
+          .map(
+            (item) => _buildGridItem(
+              context,
+              item['title'] as String,
+              item['subtitle'] as String,
+              item['image'] as String,
+              item['index'] as int,
+            ),
+          )
+          .toList();
+    }
+
+    return allItems
+        .where((item) => item['category'] == _selectedCategory)
+        .map(
+          (item) => _buildGridItem(
+            context,
+            item['title'] as String,
+            item['subtitle'] as String,
+            item['image'] as String,
+            item['index'] as int,
+          ),
+        )
+        .toList();
+  }
+
   Widget _buildGridItem(
-      BuildContext context,
-      String title,
-      String subtitle,
-      String imagePath,
-      int targetIndex,
-      ) {
+    BuildContext context,
+    String title,
+    String subtitle,
+    String imagePath,
+    int targetIndex,
+  ) {
     return GestureDetector(
       onTap: () {
         context.findAncestorStateOfType<_HomeContentState>()?._onTapped(
@@ -812,71 +857,79 @@ class _HomeTabState extends State<HomeTab> {
     final locationName = state?.weather.districtName ?? 'Gasabo';
 
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade700, Colors.green.shade400],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    locationName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    condition,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+          // Green header section similar to weather page
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2E7D32),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    "$temp°C",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 42,
-                      fontWeight: FontWeight.bold,
-                    ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Today's Weather",
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                Text(
+                  locationName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Text(
-                    condition,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 14,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "$temp°",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
-            ],
+                ),
+                Text(
+                  condition,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildWeatherDetail(Icons.water_drop, "Humidity", "$humidity%"),
-              _buildWeatherDetail(Icons.air, "Wind", "$windSpeed m/s"),
-              _buildWeatherDetail(Icons.thermostat, "Feels", "$temp°C"),
-            ],
+          // White body section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildWeatherDetail(Icons.water_drop, "Humidity", "$humidity%"),
+                _buildWeatherDetail(Icons.air, "Wind", "$windSpeed m/s"),
+                _buildWeatherDetail(Icons.thermostat, "Feels", "$temp°C"),
+              ],
+            ),
           ),
         ],
       ),
@@ -886,22 +939,19 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildWeatherDetail(IconData icon, String label, String value) {
     return Column(
       children: [
-        Icon(icon, color: Colors.white, size: 24),
+        Icon(icon, color: Colors.green.shade700, size: 24),
         const SizedBox(height: 4),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
         ),
         Text(
           label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
-            fontSize: 12,
-          ),
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
         ),
       ],
     );
