@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/utils/page_transitions.dart';
 import '../service/auth_service.dart';
 import 'Welcome/input_screen.dart';
+import 'forgot_password.dart';
 import 'home_screen.dart';
 import 'signup.dart';
 
@@ -378,7 +379,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Align(
                                     alignment: Alignment.centerRight,
                                     child: TextButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const ForgotPasswordScreen(),
+                                          ),
+                                        );
+                                      },
                                       child: Text(
                                         "Forgot Password?",
                                         style: TextStyle(
