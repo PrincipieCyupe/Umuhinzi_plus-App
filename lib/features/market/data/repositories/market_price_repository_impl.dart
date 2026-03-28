@@ -27,41 +27,88 @@ class MarketPriceRepositoryImpl implements MarketPriceRepository {
     String? category,
     String? searchQuery,
   }) {
-    // We convert the future into a stream so the UI can listen to it
-    return Stream.fromFuture(csvDataSource.fetchAndSync().then((_) {
-      var prices = csvDataSource.getCachedPrices();
+    // Use cached data if available, otherwise fetch from CSV
+    final cachedPrices = csvDataSource.getCachedPrices();
+    if (cachedPrices.isNotEmpty) {
+      // Return cached data immediately
+      return Stream.value(
+        _filterPrices(cachedPrices, district, category, searchQuery),
+      );
+    }
 
-      // Filter by district if one is chosen
-      if (district != null && district != 'All') {
-        prices = prices.where((p) => p.district == district || p.market == district).toList();
-      }
+    // If no cached data, fetch from CSV and then return filtered results
+    return Stream.fromFuture(
+      csvDataSource.fetchAndSync().then((_) {
+        var prices = csvDataSource.getCachedPrices();
+        return _filterPrices(prices, district, category, searchQuery);
+      }),
+    );
+  }
 
-      // Filter by category (commodity name contains category string)
-      if (category != null && category != 'All') {
-        final lowerCategory = category.toLowerCase();
-        prices = prices.where((p) {
-          final commodity = p.commodity.toLowerCase();
-          // Natural matching: e.g. 'Maize' matches 'Grains' indirectly if we had category mapping, 
-          // but for now we match by the category string provided by the tabs.
-          // Since the CSV doesn't have a 'category' column, we match against commodity names.
-          if (lowerCategory == 'grains') return commodity.contains('maize') || commodity.contains('rice') || commodity.contains('wheat') || commodity.contains('sorghum');
-          if (lowerCategory == 'vegetables') return commodity.contains('tomato') || commodity.contains('onion') || commodity.contains('potato') || commodity.contains('cabbage') || commodity.contains('beans');
-          if (lowerCategory == 'fruits') return commodity.contains('banana') || commodity.contains('mango') || commodity.contains('pineapple') || commodity.contains('orange');
-          return true; // Default to showing if no match logic found
-        }).toList();
-      }
+  // Helper method to filter prices based on district, category, and search query
+  List<MarketPriceModel> _filterPrices(
+    List<MarketPriceModel> prices,
+    String? district,
+    String? category,
+    String? searchQuery,
+  ) {
+    // Filter by district if one is chosen
+    // CSV stores full names like "Kigali City", "Eastern Province" etc.
+    // so we use contains (case-insensitive) to match short names like "Kigali", "Eastern"
+    if (district != null && district != 'All') {
+      final lowerDistrict = district.toLowerCase();
+      prices = prices
+          .where(
+            (p) =>
+                p.district.toLowerCase().contains(lowerDistrict) ||
+                p.market.toLowerCase().contains(lowerDistrict),
+          )
+          .toList();
+    }
 
-      // Search filtering
-      if (searchQuery != null && searchQuery.isNotEmpty) {
-        final query = searchQuery.toLowerCase();
-        prices = prices.where((p) => 
-          p.commodity.toLowerCase().contains(query) || 
-          p.market.toLowerCase().contains(query)
-        ).toList();
-      }
+    // Filter by category (commodity name contains category string)
+    if (category != null && category != 'All') {
+      final lowerCategory = category.toLowerCase();
+      prices = prices.where((p) {
+        final commodity = p.commodity.toLowerCase();
+        // Natural matching: e.g. 'Maize' matches 'Grains' indirectly if we had category mapping,
+        // but for now we match by the category string provided by the tabs.
+        // Since the CSV doesn't have a 'category' column, we match against commodity names.
+        if (lowerCategory == 'grains') {
+          return commodity.contains('maize') ||
+              commodity.contains('rice') ||
+              commodity.contains('wheat') ||
+              commodity.contains('sorghum');
+        }
+        if (lowerCategory == 'vegetables') {
+          return commodity.contains('tomato') ||
+              commodity.contains('onion') ||
+              commodity.contains('potato') ||
+              commodity.contains('cabbage') ||
+              commodity.contains('beans');
+        }
+        if (lowerCategory == 'fruits') {
+          return commodity.contains('banana') ||
+              commodity.contains('mango') ||
+              commodity.contains('pineapple') ||
+              commodity.contains('orange');
+        }
+        return true; // Default to showing if no match logic found
+      }).toList();
+    }
 
-      return prices;
-    }));
+    // Search filtering
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      final query = searchQuery.toLowerCase();
+      prices = prices
+          .where(
+            (p) =>
+                p.commodity.toLowerCase().contains(query) ||
+                p.market.toLowerCase().contains(query),
+          )
+          .toList();
+    }
+
+    return prices;
   }
 }
-
