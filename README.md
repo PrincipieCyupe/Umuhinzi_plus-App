@@ -18,9 +18,7 @@ A Flutter mobile application empowering Rwandan farmers with real-time market pr
 9. [SharedPreferences / User Preferences](#sharedpreferences--user-preferences)
 10. [Testing](#testing)
 11. [Known Limitations and Future Work](#known-limitations-and-future-work)
-12. [Screenshots](#screenshots)
-13. [Flutter Analyze](#flutter-analyze)
-    
+
 
 ---
 
@@ -429,33 +427,6 @@ Screenshots of test results and coverage report are included in the PDF report.
 - `createdBy` field on `market_produce` for ownership-restricted edit/delete security rules
 - On-device crop disease detection using a TensorFlow Lite model
 
----
-
-## Screenshots
-
-| Screen | Description |
-|--------|-------------|
-| Login | Login screen with email/password and Google Sign-In |
-| Signup | Registration with name, email, password, confirm password, and Terms checkbox |
-| Email Verification | Frosted-glass verification screen with "I've Verified" and resend buttons |
-| Home | Home tab with weather summary, market preview, and category grid |
-| Market | WFP live prices with district filter chips and category tabs |
-| Tips | Farming tips grid with Article / Post / Video categories |
-| Weather | Weather forecast by district with humidity, wind, sunrise/sunset details |
-| Onboarding | 3-step welcome screens + farm profile setup |
-
-*(Full screenshots included in the PDF report)*
-
----
-
-## Flutter Analyze
-
-```bash
-flutter analyze
-dart format lib/ test/
-```
-
-Output shows **0 issues**. Screenshot included in the PDF report.
 
 ---
 
