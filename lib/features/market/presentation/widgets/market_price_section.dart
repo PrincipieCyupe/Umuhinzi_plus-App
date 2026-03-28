@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/market_price_cubit.dart';
 
-
 class MarketPriceSection extends StatelessWidget {
   const MarketPriceSection({super.key});
 
@@ -44,7 +43,14 @@ class MarketPriceSection extends StatelessWidget {
   }
 
   Widget _buildDistrictFilters(BuildContext context) {
-    final districts = ['All', 'Kigali', 'Eastern', 'Northern', 'Southern', 'Western'];
+    final districts = [
+      'All',
+      'Kigali',
+      'Eastern',
+      'Northern',
+      'Southern',
+      'Western',
+    ];
     return _DistrictFilterChips(districts: districts);
   }
 
@@ -96,7 +102,9 @@ class MarketPriceSection extends StatelessWidget {
             itemBuilder: (context, index) {
               final price = state.prices[index];
               final isRetail = price.priceType.toLowerCase() == 'retail';
-              final badgeColor = isRetail ? const Color(0xFF4CAF50) : const Color(0xFFFF9800);
+              final badgeColor = isRetail
+                  ? const Color(0xFF4CAF50)
+                  : const Color(0xFFFF9800);
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -116,7 +124,10 @@ class MarketPriceSection extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             price.market,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -138,11 +149,17 @@ class MarketPriceSection extends StatelessWidget {
                             children: [
                               Text(
                                 price.date,
-                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                ),
                               ),
                               const SizedBox(width: 4),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: badgeColor.withAlpha(50),
                                   borderRadius: BorderRadius.circular(4),
@@ -150,11 +167,15 @@ class MarketPriceSection extends StatelessWidget {
                                 ),
                                 child: Text(
                                   price.priceType,
-                                  style: TextStyle(fontSize: 8, color: badgeColor, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    color: badgeColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -185,23 +206,41 @@ class _DistrictFilterChipsState extends State<_DistrictFilterChips> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
         children: widget.districts.map((district) {
           final isSelected = _selectedDistrict == district;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: ChoiceChip(
-              label: Text(district),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected && _selectedDistrict != district) {
-                  setState(() {
-                    _selectedDistrict = district;
-                  });
-                  context.read<MarketPriceCubit>().filterByDistrict(district);
-                }
-              },
+          return GestureDetector(
+            onTap: () {
+              if (_selectedDistrict != district) {
+                setState(() {
+                  _selectedDistrict = district;
+                });
+                context.read<MarketPriceCubit>().filterByDistrict(district);
+              }
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFF3FAE4A)
+                    : const Color(0xFFF6F4EB),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFF3FAE4A)
+                      : Colors.grey.shade300,
+                ),
+              ),
+              child: Text(
+                district,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.black87,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
             ),
           );
         }).toList(),
