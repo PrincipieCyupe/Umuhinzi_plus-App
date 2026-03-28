@@ -163,7 +163,10 @@ class _WeatherPageState extends State<WeatherPage> {
             borderRadius: BorderRadius.circular(15),
             border: Border.all(color: Colors.grey.shade300),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 5,
+              ),
             ],
           ),
           child: Row(
@@ -251,7 +254,10 @@ class _WeatherPageState extends State<WeatherPage> {
             borderRadius: BorderRadius.circular(15),
             border: Border.all(color: Colors.grey.shade300),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 5,
+              ),
             ],
           ),
           child: Column(
@@ -327,7 +333,10 @@ class _WeatherPageState extends State<WeatherPage> {
         ),
         Text(
           label,
-          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 12,
+          ),
         ),
       ],
     );
@@ -402,7 +411,7 @@ class _WeatherPageState extends State<WeatherPage> {
         decoration: InputDecoration(
           hintText: "Search for a farm's Location",
           border: InputBorder.none,
-          icon: const Icon(Icons.search)
+          icon: const Icon(Icons.search),
         ),
       ),
     );

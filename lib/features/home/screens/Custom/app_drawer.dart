@@ -11,6 +11,7 @@ class AppDrawer extends StatelessWidget {
   final String? selectedProvince;
   final VoidCallback onLogout;
   final VoidCallback onUpdateProfile;
+  final VoidCallback? onWeatherTap;
 
   const AppDrawer({
     super.key,
@@ -22,6 +23,7 @@ class AppDrawer extends StatelessWidget {
     this.selectedProvince,
     required this.onLogout,
     required this.onUpdateProfile,
+    this.onWeatherTap,
   });
 
   @override
@@ -150,7 +152,9 @@ class AppDrawer extends StatelessWidget {
                     subtitle: 'View weather for your location',
                     onTap: () {
                       Navigator.pop(context);
-                      // Navigate to weather tab
+                      if (onWeatherTap != null) {
+                        onWeatherTap!();
+                      }
                     },
                   ),
 
@@ -220,7 +224,7 @@ class AppDrawer extends StatelessWidget {
         subtitle,
         style: TextStyle(
           fontSize: 12,
-          color: textColor?.withOpacity(0.7) ?? Colors.grey,
+          color: textColor?.withValues(alpha: 0.7) ?? Colors.grey,
         ),
       ),
       trailing: Icon(Icons.chevron_right, color: textColor ?? Colors.grey[400]),

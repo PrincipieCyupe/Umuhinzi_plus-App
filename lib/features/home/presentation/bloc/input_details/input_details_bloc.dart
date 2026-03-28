@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../../core/constants/rwanda_data.dart';
@@ -67,7 +68,7 @@ class InputDetailsBloc extends Bloc<InputDetailsEvent, InputDetailsState> {
 
       // Mark as saved
       emit(state.copyWith(isSaved: true, clearError: true));
-      print(
+      debugPrint(
         "Saved: ${state.selectedCrop}, ${state.selectedSeason}, ${state.selectedProvince}, ${state.selectedDistrict}",
       );
     } else {

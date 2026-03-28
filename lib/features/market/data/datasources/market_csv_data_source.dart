@@ -31,7 +31,6 @@ class MarketCsvDataSource {
         final dataLines = lines.skip(1);
         final Map<String, MarketPriceModel> deduplicated = {};
         DateTime? maxDate;
-        int rwfRowsCount = 0;
 
         for (var line in dataLines) {
           if (line.trim().isEmpty) continue;
@@ -51,7 +50,6 @@ class MarketCsvDataSource {
 
           // Filter out anything that isn't in RWF currency
           if (currency != 'RWF') continue;
-          rwfRowsCount++;
 
           final price = double.tryParse(priceStr) ?? 0.0;
           final date = DateTime.tryParse(dateStr);

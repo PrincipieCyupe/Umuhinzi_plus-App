@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/utils/page_transitions.dart';
 import '../service/auth_service.dart';
 import 'Welcome/input_screen.dart';
+import 'home_screen.dart';
 import 'login.dart';
 
 void main() => runApp(
@@ -91,6 +92,7 @@ class _SignUpState extends State<SignUp> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_name', _nameCtrl.text.trim());
         await prefs.setString('user_email', _emailCtrl.text.trim());
+        if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -99,11 +101,23 @@ class _SignUpState extends State<SignUp> {
           ),
         );
 
-        // Navigate to input screen
+        // Navigate to input screen or home screen based on whether user has already set details
         if (mounted) {
-          Navigator.of(
-            context,
-          ).pushReplacement(FadeRoute(page: const InputDetails()));
+          final hasDetails =
+              prefs.getString('selected_crop') != null &&
+              prefs.getString('selected_district') != null;
+
+          if (hasDetails) {
+            // User has already set details, go directly to home screen
+            Navigator.of(
+              context,
+            ).pushReplacement(FadeRoute(page: const Home()));
+          } else {
+            // User hasn't set details yet, go to input screen
+            Navigator.of(
+              context,
+            ).pushReplacement(FadeRoute(page: const InputDetails()));
+          }
         }
       }
     } catch (e) {
@@ -134,6 +148,7 @@ class _SignUpState extends State<SignUp> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('user_name', user.displayName ?? 'User');
         await prefs.setString('user_email', user.email ?? '');
+        if (!mounted) return;
 
         String welcomeName = user.displayName ?? 'User';
         ScaffoldMessenger.of(context).showSnackBar(
@@ -143,11 +158,23 @@ class _SignUpState extends State<SignUp> {
           ),
         );
 
-        // Navigate to input screen
+        // Navigate to input screen or home screen based on whether user has already set details
         if (mounted) {
-          Navigator.of(
-            context,
-          ).pushReplacement(FadeRoute(page: const InputDetails()));
+          final hasDetails =
+              prefs.getString('selected_crop') != null &&
+              prefs.getString('selected_district') != null;
+
+          if (hasDetails) {
+            // User has already set details, go directly to home screen
+            Navigator.of(
+              context,
+            ).pushReplacement(FadeRoute(page: const Home()));
+          } else {
+            // User hasn't set details yet, go to input screen
+            Navigator.of(
+              context,
+            ).pushReplacement(FadeRoute(page: const InputDetails()));
+          }
         }
       }
     } catch (e) {
@@ -172,23 +199,23 @@ class _SignUpState extends State<SignUp> {
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
       prefixIcon: Icon(icon, color: Colors.white),
       suffixIcon: suffix,
       filled: true,
-      fillColor: Colors.white.withOpacity(0.10),
+      fillColor: Colors.white.withValues(alpha: 0.10),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.25)),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.25)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.25)),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.25)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(
-          color: Colors.white.withOpacity(0.55),
+          color: Colors.white.withValues(alpha: 0.55),
           width: 1.4,
         ),
       ),
@@ -206,7 +233,9 @@ class _SignUpState extends State<SignUp> {
           ),
 
           // Dark overlay
-          Positioned.fill(child: Container(color: Colors.black.withOpacity(0))),
+          Positioned.fill(
+            child: Container(color: Colors.black.withValues(alpha: 0)),
+          ),
 
           SafeArea(
             child: Center(
@@ -236,7 +265,7 @@ class _SignUpState extends State<SignUp> {
                         "Create your account to start farming smarter",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontSize: 14,
                         ),
                       ),
@@ -250,10 +279,10 @@ class _SignUpState extends State<SignUp> {
                           child: Container(
                             padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.12),
+                              color: Colors.white.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(22),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.35),
+                                color: Colors.white.withValues(alpha: 0.35),
                                 width: 1.2,
                               ),
                             ),
@@ -280,7 +309,9 @@ class _SignUpState extends State<SignUp> {
                                   Text(
                                     "Sign up to continue",
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.8),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       fontSize: 13,
                                     ),
                                   ),
@@ -395,7 +426,9 @@ class _SignUpState extends State<SignUp> {
                                           () => _agree = val ?? false,
                                         ),
                                         side: BorderSide(
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.7,
+                                          ),
                                         ),
                                         checkColor: Colors.white,
                                         activeColor: const Color(0xFF2FA84F),
@@ -404,8 +437,8 @@ class _SignUpState extends State<SignUp> {
                                         child: Text(
                                           "I agree to the Terms & Privacy Policy",
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(
-                                              0.85,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.85,
                                             ),
                                             fontSize: 13,
                                           ),
@@ -460,7 +493,9 @@ class _SignUpState extends State<SignUp> {
                                     child: OutlinedButton(
                                       style: OutlinedButton.styleFrom(
                                         side: BorderSide(
-                                          color: Colors.white.withOpacity(0.35),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.35,
+                                          ),
                                           width: 1,
                                         ),
                                         shape: RoundedRectangleBorder(
@@ -469,7 +504,7 @@ class _SignUpState extends State<SignUp> {
                                           ),
                                         ),
                                         backgroundColor: Colors.white
-                                            .withOpacity(0.10),
+                                            .withValues(alpha: 0.10),
                                       ),
                                       onPressed: _isLoading
                                           ? null
@@ -506,7 +541,9 @@ class _SignUpState extends State<SignUp> {
                                       Text(
                                         "Already have an account? ",
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.85),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.85,
+                                          ),
                                         ),
                                       ),
                                       TextButton(

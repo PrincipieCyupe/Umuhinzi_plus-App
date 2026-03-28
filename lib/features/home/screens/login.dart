@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/utils/page_transitions.dart';
 import '../service/auth_service.dart';
 import 'Welcome/input_screen.dart';
+import 'home_screen.dart';
 import 'signup.dart';
 
 void main() {
@@ -62,11 +64,25 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
 
-        // Navigate to input screen
+        // Navigate to input screen or home screen based on whether user has already set details
         if (mounted) {
-          Navigator.of(
-            context,
-          ).pushReplacement(FadeRoute(page: const InputDetails()));
+          final prefs = await SharedPreferences.getInstance();
+          if (!mounted) return;
+          final hasDetails =
+              prefs.getString('selected_crop') != null &&
+              prefs.getString('selected_district') != null;
+
+          if (hasDetails) {
+            // User has already set details, go directly to home screen
+            Navigator.of(
+              context,
+            ).pushReplacement(FadeRoute(page: const Home()));
+          } else {
+            // User hasn't set details yet, go to input screen
+            Navigator.of(
+              context,
+            ).pushReplacement(FadeRoute(page: const InputDetails()));
+          }
         }
       }
     } catch (e) {
@@ -100,11 +116,25 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
 
-        // Navigate to input screen
+        // Navigate to input screen or home screen based on whether user has already set details
         if (mounted) {
-          Navigator.of(
-            context,
-          ).pushReplacement(FadeRoute(page: const InputDetails()));
+          final prefs = await SharedPreferences.getInstance();
+          if (!mounted) return;
+          final hasDetails =
+              prefs.getString('selected_crop') != null &&
+              prefs.getString('selected_district') != null;
+
+          if (hasDetails) {
+            // User has already set details, go directly to home screen
+            Navigator.of(
+              context,
+            ).pushReplacement(FadeRoute(page: const Home()));
+          } else {
+            // User hasn't set details yet, go to input screen
+            Navigator.of(
+              context,
+            ).pushReplacement(FadeRoute(page: const InputDetails()));
+          }
         }
       }
     } catch (e) {
@@ -133,7 +163,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
 
           // Dark overlay
-          Positioned.fill(child: Container(color: Colors.black.withOpacity(0))),
+          Positioned.fill(
+            child: Container(color: Colors.black.withValues(alpha: 0)),
+          ),
 
           SafeArea(
             child: Center(
@@ -163,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         "Grow smarter with reliable farming guidance",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontSize: 14,
                         ),
                       ),
@@ -177,10 +209,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.12),
+                              color: Colors.white.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(22),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.35),
+                                color: Colors.white.withValues(alpha: 0.35),
                                 width: 1.2,
                               ),
                             ),
@@ -207,7 +239,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Text(
                                     "Sign in to continue",
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.8),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
                                       fontSize: 13,
                                     ),
                                   ),
@@ -221,30 +255,40 @@ class _LoginScreenState extends State<LoginScreen> {
                                     decoration: InputDecoration(
                                       labelText: "Email",
                                       labelStyle: TextStyle(
-                                        color: Colors.white.withOpacity(0.8),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
                                       ),
                                       prefixIcon: const Icon(
                                         Icons.email_outlined,
                                         color: Colors.white,
                                       ),
                                       filled: true,
-                                      fillColor: Colors.white.withOpacity(0.10),
+                                      fillColor: Colors.white.withValues(
+                                        alpha: 0.10,
+                                      ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(14),
                                         borderSide: BorderSide(
-                                          color: Colors.white.withOpacity(0.25),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.25,
+                                          ),
                                         ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(14),
                                         borderSide: BorderSide(
-                                          color: Colors.white.withOpacity(0.25),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.25,
+                                          ),
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(14),
                                         borderSide: BorderSide(
-                                          color: Colors.white.withOpacity(0.55),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.55,
+                                          ),
                                           width: 1.4,
                                         ),
                                       ),
@@ -268,7 +312,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     decoration: InputDecoration(
                                       labelText: "Password",
                                       labelStyle: TextStyle(
-                                        color: Colors.white.withOpacity(0.8),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
                                       ),
                                       prefixIcon: const Icon(
                                         Icons.lock_outline,
@@ -286,23 +332,31 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       ),
                                       filled: true,
-                                      fillColor: Colors.white.withOpacity(0.10),
+                                      fillColor: Colors.white.withValues(
+                                        alpha: 0.10,
+                                      ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(14),
                                         borderSide: BorderSide(
-                                          color: Colors.white.withOpacity(0.25),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.25,
+                                          ),
                                         ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(14),
                                         borderSide: BorderSide(
-                                          color: Colors.white.withOpacity(0.25),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.25,
+                                          ),
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(14),
                                         borderSide: BorderSide(
-                                          color: Colors.white.withOpacity(0.55),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.55,
+                                          ),
                                           width: 1.4,
                                         ),
                                       ),
@@ -328,7 +382,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       child: Text(
                                         "Forgot Password?",
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.9),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.9,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -380,7 +436,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: OutlinedButton(
                                       style: OutlinedButton.styleFrom(
                                         side: BorderSide(
-                                          color: Colors.white.withOpacity(0.35),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.35,
+                                          ),
                                           width: 1,
                                         ),
                                         shape: RoundedRectangleBorder(
@@ -389,7 +447,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ),
                                         ),
                                         backgroundColor: Colors.white
-                                            .withOpacity(0.10),
+                                            .withValues(alpha: 0.10),
                                       ),
                                       onPressed: _isLoading
                                           ? null
@@ -422,7 +480,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Text(
                                         "Don't have an account? ",
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.85),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.85,
+                                          ),
                                         ),
                                       ),
                                       TextButton(
