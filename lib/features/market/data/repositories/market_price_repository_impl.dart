@@ -45,6 +45,14 @@ class MarketPriceRepositoryImpl implements MarketPriceRepository {
     );
   }
 
+  // Exposed for unit testing only
+  List<MarketPriceModel> filterPricesForTest(
+    List<MarketPriceModel> prices,
+    String? district,
+    String? category,
+    String? searchQuery,
+  ) => _filterPrices(prices, district, category, searchQuery);
+
   // Helper method to filter prices based on district, category, and search query
   List<MarketPriceModel> _filterPrices(
     List<MarketPriceModel> prices,
