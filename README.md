@@ -1,6 +1,7 @@
 # Umuhinzi Plus — Agricultural Mobile Application
 
 A Flutter mobile application empowering Rwandan farmers with real-time market prices, farming tips, weather forecasts, and personalized crop guidance. Built with Clean Architecture, BLoC state management, and a Firebase backend.
+
 ---
 
 ## Table of Contents
