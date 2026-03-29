@@ -1,9 +1,6 @@
 # Umuhinzi Plus — Agricultural Mobile Application
 
 A Flutter mobile application empowering Rwandan farmers with real-time market prices, farming tips, weather forecasts, and personalized crop guidance. Built with Clean Architecture, BLoC state management, and a Firebase backend.
-
-**GitHub Repository:** https://github.com/PrincipieCyupe/Umuhinzi_plus-App
-
 ---
 
 ## Table of Contents
@@ -26,9 +23,9 @@ A Flutter mobile application empowering Rwandan farmers with real-time market pr
 
 **Umuhinzi Plus** (*Umuhinzi* = "Farmer" in Kinyarwanda) is a mobile-first app for Rwandan smallholder farmers. It aggregates:
 
-- Live market produce prices from Firestore (user-contributed) and WFP Rwanda food price data
+- Live market prices from WFP Rwanda food price CSV data 
 - Weather forecasts by district via OpenWeatherMap (RapidAPI)
-- Curated farming tips and YouTube video tutorials
+- Curated farming tips and YouTube video tutorials stored in Firestore
 - Personalized onboarding based on crop, season, province, and district
 
 **Target platforms:** Android (primary), Web (secondary).
@@ -116,13 +113,10 @@ lib/
     │   ├── screens/     # Login, Signup, ForgotPassword, EmailVerification,
     │   │                #   Welcome (3-step), InputDetails, HomeScreen
     │   └── service/     # AuthService (Firebase Auth wrapper)
-    ├── market/          # Market produce prices
-    │   ├── data/        # MarketRemoteDataSource, MarketCsvDataSource,
-    │   │                #   MarketPriceFirestoreSource, WfpPriceDataSource,
-    │   │                #   PreferencesService
-    │   ├── domain/      # ProduceEntity, use cases (AddProduce, DeleteProduce,
-    │   │                #   UpdateProduce, GetProduceByCategory, SearchProduce)
-    │   └── presentation/# MarketBloc, MarketPriceCubit, widgets, MarketPage
+    ├── market/          # WFP market prices
+    │   ├── data/        # MarketCsvDataSource, PreferencesService
+    │   ├── domain/      # use cases (GetProduceByCategory, SearchProduce)
+    │   └── presentation/# MarketPriceCubit, widgets, MarketPage
     ├── tips/            # Farming tips and YouTube videos
     │   ├── data/        # TipsLocalDataSource, TipsFirestoreDataSource,
     │   │                #   YoutubeDataSource
@@ -143,7 +137,7 @@ lib/
 
 ## Database Architecture
 
-### Entity-Relationship Overview
+### Entity Relationship Overview
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -164,20 +158,7 @@ lib/
 Firestore Collections:
 
 ┌──────────────────────────────────────────────┐
-│         market_produce  (Collection)          │
-│  id: auto-generated (PK)                     │
-│  name:        String    — produce name        │
-│  price:       Double    — price in RWF        │
-│  unit:        String    — kg / head / bunch   │
-│  category:    String    — vegetables/fruits/  │
-│                            grains/livestock   │
-│  imageUrl:    String    — CDN image URL       │
-│  isAvailable: Boolean   — in-stock flag       │
-│  updatedAt:   Timestamp — last modified       │
-└──────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────┐
-│         tips  (Collection)                    │
+│         tips  (Collection)                   │
 │  id: custom (e.g. "1", "2") (PK)            │
 │  title:       String    — tip headline        │
 │  description: String    — short summary       │
@@ -188,33 +169,32 @@ Firestore Collections:
 │  date:        String    — ISO8601 date        │
 └──────────────────────────────────────────────┘
 
+In-Memory Cache (NOT Firestore):
+
 ┌──────────────────────────────────────────────┐
-│         market_prices  (Collection)           │
-│  id: {commodity}_{market}_{date} (PK)        │
+│  WFP Market Prices  (RAM — MarketCsvDataSource)│
+│  Fetched from WFP Rwanda CSV on app startup  │
+│  and refreshed every 30 minutes.             │
 │  commodity:   String    — crop name           │
 │  market:      String    — market location     │
-│  district:    String    — admin district (FK) │
+│  district:    String    — admin district      │
 │  price:       Double    — price in RWF        │
 │  unit:        String    — measurement unit    │
 │  date:        String    — YYYY-MM-DD          │
 │  priceType:   String    — retail / wholesale  │
-│  fetchedAt:   Timestamp — sync timestamp      │
 └──────────────────────────────────────────────┘
 ```
 
 ### Relationships
-- `market_prices.district` references the user's `selected_district` in SharedPreferences to filter relevant prices
-- `market_produce` documents support full CRUD via the app UI
-- `market_prices` documents are ingested automatically from the WFP Rwanda food prices CSV; Firestore writes are restricted at the security rule level
+- `tips` documents are seeded automatically on first launch from hardcoded local data if the collection is empty
+- WFP market prices are deduplicated in memory by `{commodity}_{market}`, keeping the most recent date per pair
+- The user's `selected_district` (SharedPreferences) drives the district filter chip on the Market screen
 
 ### Indexes
 
 | Collection | Field | Order | Purpose |
 |------------|-------|-------|---------|
-| market_produce | category | — | Filter by category |
-| market_produce | name | Ascending | Prefix search |
-| market_prices | district | — | Location filter |
-| market_prices | date | Descending | Latest prices first |
+| tips | date | Descending | Chronological tip listing |
 
 ---
 
@@ -233,23 +213,14 @@ Firestore Collections:
 - Logout clears both Firebase and Google sessions
 - Auth state persisted across app restarts via `FirebaseAuth.authStateChanges()` stream in `AuthWrapper` (`main.dart`)
 
-### Market — Full CRUD
+### Market — WFP Live Prices
 
-| Operation | Trigger | Firestore Action |
-|-----------|---------|-----------------|
-| Create | "Add Produce" form | `collection.add(doc)` |
-| Read | App launch / category tab | `collection.where().snapshots()` stream |
-| Update | Edit dialog on produce card | `doc.update(fields)` |
-| Delete | Swipe or delete button | `doc.delete()` |
-
-- Real-time category filtering via `MarketBloc` using `emit.forEach()` on repository streams
-- Debounced prefix search (300 ms via RxDart `debounceTime` + `switchMap`)
-
-### Market Prices (WFP Data)
-- Background sync of WFP Rwanda food price CSV on app startup (`_preloadMarketData()` in `main.dart`)
-- 30-minute periodic refresh via `MarketPriceCubit` timer
+- Background fetch of WFP Rwanda food price CSV on app startup (`_preloadMarketData()` in `main.dart`) via `MarketCsvDataSource`
+- Data is parsed, deduplicated, and stored **in memory** 
+- 30-minute periodic in-memory refresh via `MarketPriceCubit` timer
 - Deduplication by compound key `{commodity}_{market}` keeping the most recent date
 - District-filtered price display via filter chips (All, Kigali, Eastern, Northern, Southern, Western)
+- Category filtering (All, Vegetables, Fruits, Grains) and search managed by `MarketPriceCubit`
 
 ### Weather
 - Current weather by district using RapidAPI OpenWeather 5-day forecast endpoint
@@ -259,7 +230,7 @@ Firestore Collections:
 - Weather pre-fetched for the user's saved district on `HomeContent.initState()`
 
 ### Farming Tips
-- Tips sourced from Firestore (Articles and Posts); seeded automatically on first launch from local hardcoded data if the Firestore `tips` collection is empty
+- Tips sourced from Firestore `tips` collection (Articles and Posts); seeded automatically on first launch from hardcoded local data if the collection is empty
 - YouTube videos fetched via YouTube Data API v3; falls back to hardcoded local video list on failure
 - Categorized tips with full article reader (`ArticleReaderPage`) and embedded YouTube player (`VideoPlayerPage` using `youtube_player_flutter`)
 - Search and category filter (All / Post / Video / Article) managed by `TipsBloc`
@@ -316,8 +287,7 @@ All features use **BLoC / Cubit** from `flutter_bloc ^8.1.3`. Business logic nev
 | HomeCubit | Home tab data | Loads user profile from SharedPreferences + Firebase; category selection state |
 | WeatherBloc | Weather data | Repository + use-case injection; `try/catch` emit pattern |
 | InputDetailsBloc | Farm profile | Form validation + province-cascade district loading + SharedPrefs persistence |
-| MarketBloc | Market produce | `emit.forEach()` on repository streams; RxDart debounce on search events |
-| MarketPriceCubit | WFP prices | Periodic sync timer + stream filtering by district / category / search |
+| MarketPriceCubit | WFP prices | In-memory CSV cache + periodic refresh timer; stream filtering by district / category / search |
 | TipsBloc | Tips / videos | In-memory filter across `_allTips`; category and search state |
 | NavigationCubit | Bottom nav | Tab index state |
 
@@ -332,20 +302,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Market produce: read/write for authenticated users
-    match /market_produce/{produceId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
-    }
-
-    // Market prices: read-only; writes via server-side sync only
-    match /market_prices/{priceId} {
-      allow read: if request.auth != null;
-      allow write: if false;
-    }
-
-    // Tips: read-only; admin-managed from Firebase console
+    // Tips: read-only for authenticated users; admin-managed from Firebase console
     match /tips/{tipId} {
       allow read: if request.auth != null;
       allow write: if false;
@@ -356,9 +313,7 @@ service cloud.firestore {
 
 **How these rules protect data:**
 - All Firestore access requires an authenticated Firebase user, preventing anonymous reads/writes
-- `market_prices` is write-protected at the rule level — only the WFP batch sync can populate it; end users cannot modify price data
 - `tips` are admin-managed only; end users have read-only access
-- **Planned improvement:** restrict `market_produce` updates/deletes to the document creator by storing a `createdBy: uid` field and checking `request.auth.uid == resource.data.createdBy`
 
 ---
 
@@ -413,20 +368,16 @@ Screenshots of test results and coverage report are included in the PDF report.
 ### Known Limitations
 - **iOS not configured** — `firebase_options.dart` targets Android and Web only; iOS requires adding an iOS Firebase app and re-running `flutterfire configure`
 - **Tips write access** — farming tips are seeded from hardcoded local data; there is no in-app admin UI to add or modify tips (Firebase console only)
-- **WFP sync requires internet on first launch** — market prices will be empty offline until connectivity is restored; Firestore offline persistence is not yet enabled
+- **WFP prices require internet on first launch** — market prices will be empty offline until connectivity is restored; in-memory CSV data is lost on app restart and re-fetched on next launch
 - **Weather API key is public** — the RapidAPI OpenWeatherMap key is bundled in the binary; should be moved to a Cloud Function or Firebase Remote Config for production
-- **Market produce images** — image URLs are user-supplied strings with no validation; a malformed URL shows a fallback icon via `CachedNetworkImage`'s `errorWidget`
-- **`market_produce` ownership not enforced** — any authenticated user can update or delete any produce entry; the `createdBy` field is not yet stored or checked
 
 ### Future Work
 - Admin role (via Firebase Auth custom claims) for tip CRUD within the app
 - iOS support and physical device testing
 - Push notifications via Firebase Cloud Messaging for significant price changes and weather alerts
-- Firestore offline persistence (`FirebaseFirestore.instance.settings`) for previously fetched produce prices
+- Persist WFP market prices to Firestore so prices survive app restarts without re-fetching the CSV
 - Full Kinyarwanda (`rw`) and French (`fr`) localization using Flutter's `intl` package and ARB files; the `language` preference key is already stored
-- `createdBy` field on `market_produce` for ownership-restricted edit/delete security rules
 - On-device crop disease detection using a TensorFlow Lite model
-
 
 ---
 
